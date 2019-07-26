@@ -23,7 +23,7 @@ private:
 	// Pure Literal
 	void _pureLiteral();
 	// Variable Elimination
-	void _variableElimination();
+	bool _resolution();
 
 private:
 	unsigned _nClause = 0,

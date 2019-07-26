@@ -18,8 +18,11 @@ Formula::Formula(std::string fileName)
 // DP procedure
 bool Formula::DP()
 {
-	_unitPropagate();
-	_pureLiteral();
+	//TODO: if formula changed, we need to check unit prop and pure literal again
+	do{
+		_unitPropagate();
+		_pureLiteral();
+	}while(false);
 
 	/* TEST print */
 	for(clause c : _f )
@@ -32,16 +35,25 @@ bool Formula::DP()
 	}
 	/********************/
 
-	return true;
+	return	_resolution();
 };
 
 // Unit Propagate
 void Formula::_unitPropagate()
 {
 	for(auto start = _f.begin(); start != _f.end(); start++)
-		{
+	{
 		if((*start).size() == 1)
 		{
+			// Remove literal from other clauses
+			auto l = (*start).begin();
+			for(clause &c : _f)
+			{
+				auto it = c.find(*l);
+				if(it != c.end())
+					c.erase(it);
+			}
+			// Remove clause that has this one literal
 			_f.erase(start);
 			start--;
 		}
@@ -103,12 +115,53 @@ void Formula::_pureLiteral()
 			{
 				auto it = c.find(key);
 				if(it != c.end())
-					c.erase(it); // TODO: fix bug
+					c.erase(it);
 			}	
 		}
 
 
 	}		
 };
-// Variable Elimination
-void Formula::_variableElimination() {};
+// Resolution
+bool Formula::_resolution()
+{
+	bool sat = true;
+	for(auto first_clause = _f.begin(); first_clause != _f.end(); first_clause++)
+	{
+		for(literal l : *first_clause)
+		{
+			for(auto second_clause = first_clause+1; second_clause != _f.end(); second_clause++)
+			{
+				auto contains_literal = (*second_clause).find(-l);
+				if(contains_literal != (*second_clause).end())
+				{
+					(*first_clause).erase((*first_clause).find(l));
+					(*second_clause).erase(contains_literal);
+					clause tmp;
+					std::merge((*first_clause).begin(),(*first_clause).end(),
+							   (*second_clause).begin(),(*second_clause).end(),
+							   std::inserter(tmp, tmp.begin()));
+					if(tmp.size() == 0)
+					{
+						sat = false;
+						break;
+					}
+					for(literal l : tmp)
+					{
+						std::cout << l << " ";
+					}
+					std::cout << std::endl;
+					_f.push_back(tmp);
+					_f.erase(first_clause);
+					_f.erase(second_clause);
+				}
+			}
+			if(!sat)
+				break;
+		}
+		if(!sat)
+			break;
+
+	}
+	return sat;
+};

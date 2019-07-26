@@ -1,6 +1,6 @@
 PROGRAM = main
 CXX = g++
-CXXFLAGS = -Wall -g
+CXXFLAGS = -Wall -g -std=c++17
 
 $(PROGRAM): src/main.o  src/formula.o src/utils.o
 	$(CXX) -o $(PROGRAM) src/main.o  src/formula.o src/utils.o
