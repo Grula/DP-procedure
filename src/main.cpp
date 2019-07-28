@@ -12,8 +12,9 @@
 
 
 int main(int argc, char const *argv[]){
-	
-	Formula f("test/sample_test.txt");
+	if(argc < 2)
+		return 0;
+	Formula f(argv[1]);
 	
 	if(f.DP())
 	{

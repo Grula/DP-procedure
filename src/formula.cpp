@@ -2,7 +2,9 @@
 #include "utils.hpp"
 
 #include <vector>
+#include <algorithm>
 #include <set>
+#include <unordered_set>
 #include <unordered_map>
 #include <iostream>
 
@@ -13,6 +15,15 @@ Formula::Formula(std::string fileName)
 {
 	_ReadDIMACS(fileName, &_nLiteral, &_nClause, _f);
 	_literalsCount.reserve(_nLiteral);
+
+	_literals.reserve(_nLiteral);
+	for(clause c : _f)
+	{
+		for(literal l : c)
+		{
+			_literals.insert(l);
+		}
+	}
 };
 
 // DP procedure
@@ -21,41 +32,58 @@ bool Formula::DP()
 	//TODO: if formula changed, we need to check unit prop and pure literal again
 	do{
 		_unitPropagate();
-		_pureLiteral();
-	}while(false);
-
-	/* TEST print */
-	for(clause c : _f )
-	{
-		for(literal l : c)
+		/* TEST print */
+		std::cout << "after unit prop\n"; 
+		for(clause c : _f )
 		{
-			std::cout << l << " ";
+			for(literal l : c)
+			{
+				std::cout << l << " ";
+			}
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
-	}
-	/********************/
+		std::cout << "***************\n"; 
 
-	return	_resolution();
+	/********************/
+		_pureLiteral();
+		std::cout << "after pure lit\n"; 
+		for(clause c : _f )
+		{
+			for(literal l : c)
+			{
+				std::cout << l << " ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "***************\n";
+	}while(false);
+	for(literal l : _literals)
+    {
+        if(!_eliminate(l))
+        {
+            return false;
+        }
+    }
+    return true;	
 };
 
 // Unit Propagate
 void Formula::_unitPropagate()
 {
+
 	for(auto start = _f.begin(); start != _f.end(); start++)
 	{
 		if((*start).size() == 1)
 		{
-			// Remove literal from other clauses
-			auto l = (*start).begin();
-			for(clause &c : _f)
-			{
-				auto it = c.find(*l);
-				if(it != c.end())
-					c.erase(it);
-			}
-			// Remove clause that has this one literal
-			_f.erase(start);
-			start--;
+			// Remove other clauses
+			_f.erase(
+				std::remove_if(_f.begin(),_f.end(),
+						  [&] (clause c) {
+						  	return c.count(*(*start).begin()) > 0;
+						  }),
+				std::end(_f)
+			);
+			start = _f.begin();
 		}
 	}
 };
@@ -110,58 +138,68 @@ void Formula::_pureLiteral()
 
 		if(key != 0)
 		{
-			// Take ref so we modify real clause
-			for(clause &c : _f)
-			{
-				auto it = c.find(key);
-				if(it != c.end())
-					c.erase(it);
-			}	
+			_f.erase(
+				std::remove_if(_f.begin(),_f.end(),
+						  [=] (clause c) {
+						  	return c.count(key) > 0;
+						  }),
+				std::end(_f)
+			);
 		}
 
 
 	}		
 };
 // Resolution
-bool Formula::_resolution()
+bool Formula::_resolution(clause &first, clause &second, literal p)
 {
-	bool sat = true;
-	for(auto first_clause = _f.begin(); first_clause != _f.end(); first_clause++)
+	auto itPosP = first.find(p);
+	auto itPosNP = second.find(-p);
+
+	// Erase p from frist clause and ~p from second clause
+	first.erase(itPosP);
+	second.erase(itPosNP);
+
+	first.merge(second);
+	// Search if exists q and ~q
+	for(literal l : first)
 	{
-		for(literal l : *first_clause)
+		auto it = first.find(-l);
+		if(it != first.end())
+			return false;
+	}
+	return true;
+};
+
+// Eliminate variable
+bool Formula::_eliminate(literal l)
+{
+	for (size_t i = 0; i < _f.size(); i++)
+	{
+		for(size_t j = i + 1; j < _f.size(); j++)
 		{
-			for(auto second_clause = first_clause+1; second_clause != _f.end(); second_clause++)
+			auto containsC1 = _f[i].find(l);
+			auto containsC2 = _f[j].find(-l);
+			// Check if our clauses contains given literals
+			if(containsC1 != _f[i].end() && containsC2 != _f[j].end())
 			{
-				auto contains_literal = (*second_clause).find(-l);
-				if(contains_literal != (*second_clause).end())
+				// Check if given answer is tautology
+				if(!_resolution(_f[i], _f[j], l))
 				{
-					(*first_clause).erase((*first_clause).find(l));
-					(*second_clause).erase(contains_literal);
-					clause tmp;
-					std::merge((*first_clause).begin(),(*first_clause).end(),
-							   (*second_clause).begin(),(*second_clause).end(),
-							   std::inserter(tmp, tmp.begin()));
-					if(tmp.size() == 0)
-					{
-						sat = false;
-						break;
-					}
-					for(literal l : tmp)
-					{
-						std::cout << l << " ";
-					}
-					std::cout << std::endl;
-					_f.push_back(tmp);
-					_f.erase(first_clause);
-					_f.erase(second_clause);
+					auto c1IT = _f.begin() + i;
+					_f.erase(c1IT);
+				}
+				// Erase second clause from formula
+				auto c2IT = _f.begin() + (j - 1);
+				_f.erase(c2IT);
+
+				// Check if given clause is emppty
+				if(_f[i].size() == 0)
+				{
+					return false;
 				}
 			}
-			if(!sat)
-				break;
 		}
-		if(!sat)
-			break;
-
 	}
-	return sat;
-};
+	return true;
+}

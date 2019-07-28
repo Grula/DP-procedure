@@ -1,5 +1,6 @@
 #include <fstream>
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 
 #include <vector>
@@ -70,6 +71,7 @@ void _ReadDIMACS::fillClause(const std::string &s, clause &c)
 
 	while(std::getline(ss, literal, ' '))
 	{
+		std::cout << literal;
 		int l = std::stoi(literal);
 		if( l == 0)
 			break;
