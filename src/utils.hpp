@@ -2,10 +2,14 @@
 #define _DP_UTILS__
 
 #include <vector>
+#include <unordered_set>
 #include <set>
 #include <fstream>
 #include <algorithm>
 #include <sstream>
+
+#define likely(X) __builtin_expect((X),1) 
+#define unlikely(X) __builtin_expect((X),0) 
 
 using literal = int;
 using clause = std::set<literal>;
@@ -25,8 +29,8 @@ private:
 	/*
 	 * Checking first line of DIMACS file
 	 */
-	bool splitAndCheck(const std::string& str, unsigned *nLiteral, unsigned *nClause);
-	void fillClause(const std::string &s, clause &c);
+	bool _splitAndCheck(const std::string& str, unsigned *nLiteral, unsigned *nClause);
+	void _fillClause(const std::string &s, clause &c);
 };
 
 

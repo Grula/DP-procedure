@@ -29,37 +29,16 @@ Formula::Formula(std::string fileName)
 // DP procedure
 bool Formula::DP()
 {
-	//TODO: if formula changed, we need to check unit prop and pure literal again
+	size_t formulaSize = _f.size();
 	do{
 		_unitPropagate();
-		/* TEST print */
-		std::cout << "after unit prop\n"; 
-		for(clause c : _f )
-		{
-			for(literal l : c)
-			{
-				std::cout << l << " ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << "***************\n"; 
-
-	/********************/
 		_pureLiteral();
-		std::cout << "after pure lit\n"; 
-		for(clause c : _f )
-		{
-			for(literal l : c)
-			{
-				std::cout << l << " ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << "***************\n";
-	}while(false);
+
+	}while(formulaSize != _f.size());
+	
 	for(literal l : _literals)
     {
-        if(!_eliminate(l))
+        if(unlikely(!_eliminate(l)))
         {
             return false;
         }
@@ -78,9 +57,10 @@ void Formula::_unitPropagate()
 			// Remove other clauses
 			_f.erase(
 				std::remove_if(_f.begin(),_f.end(),
-						  [&] (clause c) {
-						  	return c.count(*(*start).begin()) > 0;
-						  }),
+						  	  [&] (clause c) {
+						  	  	return c.count(*(*start).begin()) > 0;
+						  	  }
+						    ),
 				std::end(_f)
 			);
 			start = _f.begin();
@@ -153,19 +133,15 @@ void Formula::_pureLiteral()
 // Resolution
 bool Formula::_resolution(clause &first, clause &second, literal p)
 {
-	auto itPosP = first.find(p);
-	auto itPosNP = second.find(-p);
-
 	// Erase p from frist clause and ~p from second clause
-	first.erase(itPosP);
-	second.erase(itPosNP);
+	first.erase(first.find(p));
+	second.erase(second.find(-p));
 
 	first.merge(second);
 	// Search if exists q and ~q
 	for(literal l : first)
 	{
-		auto it = first.find(-l);
-		if(it != first.end())
+		if(first.find(-l) != first.end())
 			return false;
 	}
 	return true;
@@ -178,20 +154,16 @@ bool Formula::_eliminate(literal l)
 	{
 		for(size_t j = i + 1; j < _f.size(); j++)
 		{
-			auto containsC1 = _f[i].find(l);
-			auto containsC2 = _f[j].find(-l);
 			// Check if our clauses contains given literals
-			if(containsC1 != _f[i].end() && containsC2 != _f[j].end())
+			if(_f[i].find(l) != _f[i].end() && _f[j].find(-l) != _f[j].end())
 			{
 				// Check if given answer is tautology
 				if(!_resolution(_f[i], _f[j], l))
 				{
-					auto c1IT = _f.begin() + i;
-					_f.erase(c1IT);
+					_f.erase(_f.begin() + i);
 				}
 				// Erase second clause from formula
-				auto c2IT = _f.begin() + (j - 1);
-				_f.erase(c2IT);
+				_f.erase(_f.begin() + (j - 1));
 
 				// Check if given clause is emppty
 				if(_f[i].size() == 0)

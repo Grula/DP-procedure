@@ -22,14 +22,14 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
 		if (_file.is_open())
 	  	{
 	  		std::getline(_file, line);
-	  		if(!splitAndCheck(line, nLiteral, nClause))
+	  		if(unlikely(!_splitAndCheck(line, nLiteral, nClause)))
 	  		{
 	  			*nLiteral = *nClause = 0;
 	  		}
 			while ( std::getline (_file,line) )
 			{
 				clause c;
-				fillClause(line, c);
+				_fillClause(line, c);
 				f.push_back(c);
 			}
 
@@ -37,7 +37,7 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
 		}
 	}
 
-bool _ReadDIMACS::splitAndCheck(const std::string& str, unsigned *nLiteral, unsigned *nClause)
+bool _ReadDIMACS::_splitAndCheck(const std::string& str, unsigned *nLiteral, unsigned *nClause)
 {
 	// ' ' - represents delimiter
 	std::stringstream ss(str);
@@ -64,14 +64,13 @@ bool _ReadDIMACS::splitAndCheck(const std::string& str, unsigned *nLiteral, unsi
 	return true;
 };
 
-void _ReadDIMACS::fillClause(const std::string &s, clause &c) 
+void _ReadDIMACS::_fillClause(const std::string &s, clause &c) 
 {
 	std::stringstream ss(s);
 	std::string literal;
 
 	while(std::getline(ss, literal, ' '))
 	{
-		std::cout << literal;
 		int l = std::stoi(literal);
 		if( l == 0)
 			break;
