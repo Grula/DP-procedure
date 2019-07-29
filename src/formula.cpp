@@ -43,7 +43,21 @@ bool Formula::DP()
             return false;
         }
     }
-    return true;	
+        return true;
+}
+
+std::ostream &Formula::print(std::ostream &out) const
+{
+    out << '{';
+    for(clause c: _f){
+            out << '{';
+            for(literal l : c){
+                out << l << ' ';
+                }
+            out << '}';
+        }
+    out << '}';
+    return out;
 };
 
 // Unit Propagate

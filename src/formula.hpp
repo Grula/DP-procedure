@@ -19,7 +19,7 @@ public:
 
 	// DP procedure
 	bool DP();
-
+        std::ostream &print(std::ostream & out)const;
 private:
 	// Unit Propagate
 	void _unitPropagate();

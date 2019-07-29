@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-
+#include <regex>
 #include <vector>
 #include <set>
 
@@ -64,18 +64,41 @@ bool _ReadDIMACS::_splitAndCheck(const std::string& str, unsigned *nLiteral, uns
 	return true;
 };
 
-void _ReadDIMACS::_fillClause(const std::string &s, clause &c) 
+void _ReadDIMACS::_fillClause(const std::string &s, clause &c)
 {
-	std::stringstream ss(s);
-	std::string literal;
+        std::regex confx("(\\s)*p(\\s)*cnf(\\s)*[0-9]+(\\s)*[0-9]+(\\s)*");
+        std::regex commentx("(\\s)*c(.*)");
+        std::regex cnfclausx("(\\s)*(((-)?[0-9]+)\\s)+0");
 
-	while(std::getline(ss, literal, ' '))
-	{
-		int l = std::stoi(literal);
-		if( l == 0)
-			break;
-		c.insert(l);
-	}
+        if(regex_match(s,confx)){
+            std::cout << "conf cnf\n";
+      // ovde treba pozvati konstruktor za formulu
+
+            }
+        else if(regex_match(s,commentx)){
+          std::cout << "Comment\n";
+          }
+        else if(regex_match(s,cnfclausx)){
+            std::cout << "clause\n";
+            std::stringstream ss(s);
+            std::string literal;
+            std::cout << s << " [x]";
+
+            /*while(std::getline(ss, literal, ' '))
+            {
+                    int l = std::stoi(literal);
+                    if( l == 0)
+                            break;
+                    c.insert(l);
+            }*/
+
+            //ovde upada u beskonacnu petlju
+
+            }else {
+                //raise an error
+                std::cout << ".cnf file has incorrect lines" << std::endl;
+            }
+
 };
 
 
