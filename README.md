@@ -1,4 +1,5 @@
-Davis-Putnam Procedure (DP) \nd
+Davis-Putnam Procedure (DP)
+
 The Davis-Putnam procedure (DP) is a technique for deciding the satisfiability of propositional formulas in clausal form. The procedure shown here is not the Davis-Putnam-Longemann-Loveland (DPLL) procedure which is a later development.
 
 Algorithm
