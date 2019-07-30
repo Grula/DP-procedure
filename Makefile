@@ -17,7 +17,7 @@ utils.o : src/utils.cpp src/utils.hpp
 .PHONY: clean run
 
 clean:
-	rm -rf src/main.o src/utils.o src/formula.o
+	rm -rf src/main.o src/utils.o src/formula.o main
 
 run:
 	make clean && make && ./main
