@@ -24,6 +24,7 @@ Formula::Formula(std::string fileName)
 			_literals.insert(l);
 		}
 	}
+
 };
 
 // DP procedure
@@ -35,7 +36,7 @@ bool Formula::DP()
 		_unitPropagate();
 		_pureLiteral();
 
-	}while(formulaSize != _f.size());
+        }while(false);
 	
 	for(literal l : _literals)
     {
@@ -44,7 +45,30 @@ bool Formula::DP()
             return false;
         }
     }
-    return true;	
+
+        return true;
+}
+
+std::ostream &Formula::print(std::ostream &out) const
+{
+    out << '{';
+    for(clause c: _f){
+    out << '{';
+    auto lit = c.cbegin();
+    auto litend = c.cend();
+
+    while(lit!=litend){
+            out << (*lit);
+          if (std::prev(litend) != lit)
+              out << ',';
+
+            lit++;
+        }
+
+    out << '}' << '\n';
+        }
+    out << '}';
+    return out;
 };
 
 // Unit Propagate
@@ -176,3 +200,5 @@ bool Formula::_eliminate(literal l)
 	}
 	return true;
 }
+
+

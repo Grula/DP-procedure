@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-
+#include <regex>
 #include <vector>
 #include <set>
 
@@ -17,6 +17,10 @@ _ReadDIMACS::_ReadDIMACS()
 
 _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nClause, formula &f)
 	{
+    //std::regex confx("(\\s)*p(\\s)*cnf(\\s)*[0-9]+(\\s)*[0-9]+(\\s)*");
+   // std::regex commentx("(\\s)*c(.*)");
+    std::regex cnfclausx("(\\s)*(((-)?[0-9]+)\\s)+0");
+
 		std::string line;
 		_file.open(fileName);
 		if (_file.is_open())
@@ -28,9 +32,13 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
 	  		}
 			while ( std::getline (_file,line) )
 			{
-				clause c;
-				_fillClause(line, c);
-				f.push_back(c);
+                                //take only correct clauses
+                                if (std::regex_match(line, cnfclausx)){
+                                        clause c;
+                                        std::cout << line << '\n';
+                                        _fillClause(line, c);
+                                        f.push_back(c);
+                                    }
 			}
 
 			_file.close();
@@ -71,6 +79,7 @@ void _ReadDIMACS::_fillClause(const std::string &s, clause &c)
 
 	while(std::getline(ss, literal, ' '))
 	{
+
 		int l = std::stoi(literal);
 		if( l == 0)
 			break;
