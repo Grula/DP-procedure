@@ -29,8 +29,9 @@ Formula::Formula(std::string fileName)
 // DP procedure
 bool Formula::DP()
 {
-	size_t formulaSize = _f.size();
+	size_t formulaSize;
 	do{
+		formulaSize = _f.size();
 		_unitPropagate();
 		_pureLiteral();
 
