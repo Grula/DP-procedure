@@ -36,7 +36,7 @@ bool Formula::DP()
 		_unitPropagate();
 		_pureLiteral();
 
-        }while(false);
+        }while(formulaSize != _f.size());
 	
 	for(literal l : _literals)
     {
