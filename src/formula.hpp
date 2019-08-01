@@ -19,12 +19,12 @@ public:
 
 	// DP procedure
 	bool DP();
-        std::ostream & print(std::ostream & out)const;
+	std::ostream & print(std::ostream & out)const;
 private:
 	// Unit Propagate
-	void _unitPropagate();
+	bool _unitPropagate();
 	// Pure Literal
-	void _pureLiteral();
+	bool _pureLiteral();
 	// Variable Elimination
 	bool _resolution(clause &first, clause &second, literal p);
 

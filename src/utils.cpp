@@ -8,9 +8,6 @@
 
 #include "utils.hpp"
 
-using literal = int;
-using clause = std::set<literal>;
-using formula = std::vector<clause>;
 
 _ReadDIMACS::_ReadDIMACS()
 	{};
@@ -35,7 +32,7 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
                                 //take only correct clauses
                                 if (std::regex_match(line, cnfclausx)){
                                         clause c;
-                                        std::cout << line << '\n';
+                                        // std::cout << line << '\n';
                                         _fillClause(line, c);
                                         f.push_back(c);
                                     }
@@ -79,7 +76,6 @@ void _ReadDIMACS::_fillClause(const std::string &s, clause &c)
 
 	while(std::getline(ss, literal, ' '))
 	{
-
 		int l = std::stoi(literal);
 		if( l == 0)
 			break;
