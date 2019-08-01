@@ -62,7 +62,7 @@ bool Formula::DP()
     }while(repeat);
 	for(literal l : _literals)
     {
-        if(unlikely(!_eliminate(l)))
+        if(!_eliminate(l))
         {
             return false;
         }
@@ -117,57 +117,53 @@ bool Formula::_pureLiteral()
 {
 	bool found_pure = false;
 	_literalsCount.clear(); // try to fill this just once
-	for(clause c : _f )
-	{	
-		for(literal l : c)
-		{
-			if(_literalsCount.count(std::abs(l)) == 0)
-			{
-				if( l > 0)
-				{
-					_literalsCount.insert({std::abs(l), {1,0}});
-				}
-				else
-				{
-					_literalsCount.insert({std::abs(l), {0,1}});
-				}
-
-			}
-			else
-			{
-				// Auto - iterator
-				auto pairs = _literalsCount.find(std::abs(l));
-				if(l > 0)
-				{
-					(*pairs).second.first++;
-				}
-				else
-				{
-					(*pairs).second.second++;
-				}
-			}
-		}	
-
-	}
-	// for(clause c : _f)
+	// if(_literalsCount.size() == 0)
 	// {
-	// 	for(literal l : c)
-	// 	{
-	// 		std::cout << l << " ";
-	// 	}
-	// 	std::cout << std::endl;
+		for(clause c : _f )
+		{	
+			for(literal l : c)
+			{
+				if(_literalsCount.count(std::abs(l)) == 0)
+				{
+					if( l > 0)
+					{
+						_literalsCount.insert({std::abs(l), {1,0}});
+					}
+					else
+					{
+						_literalsCount.insert({std::abs(l), {0,1}});
+					}
+
+				}
+				else
+				{
+					// Auto - iterator
+					auto pairs = _literalsCount.find(std::abs(l));
+					if(l > 0)
+					{
+						(*pairs).second.first++;
+					}
+					else
+					{
+						(*pairs).second.second++;
+					}
+				}
+			}	
+
+		}
 	// }
-	// std::cout << "edning f" << std::endl;
 	for(auto start = _literalsCount.begin(); start != _literalsCount.end(); start++)
 	{	
 		int key = 0;
 		if( (*start).second.first != 0 && (*start).second.second == 0)
 		{
 			key = (*start).first;
+			// _literalsCount.erase(start);
 		}
 		else if ((*start).second.second != 0 && (*start).second.first == 0)
 		{
 			key = -(*start).first;
+			// _literalsCount.erase(start);
 		}
 
 		if(key != 0)
