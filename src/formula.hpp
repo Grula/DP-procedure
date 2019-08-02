@@ -20,6 +20,9 @@ public:
 	// DP procedure
 	bool DP();
 	std::ostream & print(std::ostream & out)const;
+  formula & getFormula(){return _f;}
+  literalSet & getLits(){return _literals;}
+
 private:
 	// Unit Propagate
 	bool _unitPropagate();

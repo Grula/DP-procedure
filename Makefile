@@ -1,6 +1,7 @@
 PROGRAM = main
 CXX = g++
-CXXFLAGS = -Wall -g -std=c++17
+
+CXXFLAGS = -Wall -g -std=c++17 -I/home/petar/Desktop/range-v3/include
 
 $(PROGRAM): src/main.o  src/formula.o src/utils.o
 	$(CXX) -o $(PROGRAM) src/main.o  src/formula.o src/utils.o
