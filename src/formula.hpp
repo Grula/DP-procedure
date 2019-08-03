@@ -26,8 +26,10 @@ public:
 private:
 	// Unit Propagate
 	bool _unitPropagate();
+        bool _unitPropagate2();
 	// Pure Literal
 	bool _pureLiteral();
+        bool _pureLiteral2();
 	// Variable Elimination
 	bool _resolution(clause &first, clause &second, literal p);
 
