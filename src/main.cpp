@@ -58,12 +58,5 @@ int main(int argc, char const *argv[]){
 	std::cout << "Elapsed time in miliseconds : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
      f.print(std::cout);
 
-     /*
-    std::vector<int> v {1,2,3,4};
-    std::set<int> sv(v.begin(), v.end());
-
-    for(auto a: sv)
-        std::cout << a << '!';
-*/
 	return 0;
 }

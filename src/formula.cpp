@@ -19,13 +19,18 @@ using namespace ranges;
 });
 
 
-bool intersection2(auto rng1, auto rng2){
-    bool exists;
-    ranges::for_each(rng1, [&exists, &rng2](literal l){
-        exists = ranges::count(rng2, l)>0;
-        //std::cout << !exists << 'E';
-        });
+bool intersection2(auto rng1,auto rng2){
+    bool exists = false;
+    //std::vector<literal> r1 = rng1 | to_vector;
+    //std::vector<literal> r2 = rng2 | to_vector;
+
+    for(literal l: rng1){
+        if(ranges::find(rng2, l) != ranges::end(rng2))
+            {exists = true; break;}
+        }
+
     return exists;
+
 }
 
 Formula::Formula()
@@ -74,7 +79,7 @@ std::ostream &Formula::print(std::ostream &out) const
 bool Formula::DP()
 {
 	// size_t formulaSize;
-	bool repeat = false;
+        bool repeat = false; (void)repeat;
 	do{
                 repeat = _unitPropagate2() | _pureLiteral2();
 		// repeat = _unitPropagate();
@@ -137,19 +142,31 @@ bool Formula::_pureLiteral2()
     //uzimamo samo pozitivne literale
     auto pos = _literals | view::filter([](literal l){return l>0;});
 
+    auto pos2 = _f | view::join | to_vector | action::sort | action::unique;
+
+    auto pos3 = pos2 |  view::filter([](literal l){return l>0;});
+
+    //std::cout <<pos3;
+
     auto neg = _literals
                | view::filter([](literal l){return l<0;})
                | view::transform([&pos](literal l){
         return std::abs(l);});
 
-    auto pos_only = pos
-            | view::filter([&neg](literal l){
-                return ranges::none_of(neg, [&](literal v){return l==v;});
+    auto neg2 = _f | view::join | to_vector | action::sort | action::unique;
+
+    auto neg3 = neg2 |  view::filter([](literal l){return l<0;})
+            | view::transform([](literal l){return std::abs(l);});
+
+
+    auto pos_only = pos3
+            | view::filter([&neg3](literal l){
+                return ranges::none_of(neg3, [&](literal v){return l==v;});
         });
 
-    auto neg_only = neg
-        | view::filter([&pos](literal l){
-            return ranges::none_of(pos, [&](literal v){return l==v;});
+    auto neg_only = neg3
+        | view::filter([&pos3](literal l){
+            return ranges::none_of(pos3, [&](literal v){return l==v;});
     });
 
 
@@ -158,14 +175,14 @@ bool Formula::_pureLiteral2()
                              neg_only
                              | view::transform([](literal l){return -l;;})
                              );
-    std::cout << pure;
-
-    std::cout << std::endl;
+    std::cout << pure << pos_only;
+    std::cout << intersection2(pos_only, pure);
+    std::cout << "\n\n\n";
     log(_f);
 
 
     auto rngf = _f | view::filter([&pure](auto s){
-            return !intersection2(pure, s);
+            return !intersection2(s, pure);
         })
             | to_vector;
 
@@ -256,12 +273,28 @@ bool Formula::_pureLiteral()
 
 }
 
+formula & toVectorSet(auto range){
+
+    formula f;
+    f.reserve(range.size());
+    for(std::vector<literal> v : range){
+            std::set<literal> s;
+            //s.reserve(v.size());
+            for(literal l: v)
+                s.insert(l);
+
+            f.push_back(s);
+        }
+    return f;
+}
+
 bool Formula::_unitPropagate2()
 {
     auto units = _f | view::transform([](auto s){
             if (s.size()==1)
                 return *(s.cbegin());//ovo probati bolje
-
+            else
+                return 0;
         })
             | view::filter([](auto value){return value != 0;});
 
@@ -292,8 +325,20 @@ bool Formula::_unitPropagate2()
 
        //ovaj deo ovde ima problem
        auto Fpp = Fp
-               | view::transform([&neg_units](std::set<literal> s){
+               | view::transform([&neg_units](std::set<literal> &s){
 
+               for(literal l: neg_units){
+
+               auto it = std::find(s.begin(), s.end(), l);
+               if(it!=std::end(s)){
+                    s.erase(it);
+                }
+
+
+                }
+               return s;
+
+/*
                auto ts = s
                | view::transform([&neg_units](literal l){
                if(ranges::count(neg_units, l) > 0)
@@ -303,7 +348,7 @@ bool Formula::_unitPropagate2()
                })
                | view::filter([](literal l){return l!=0;})
                ;
-               return ts | to_vector;
+               return ts | to_vector;*/
                })
                | to_vector;
 
@@ -312,13 +357,17 @@ bool Formula::_unitPropagate2()
            std::cout << "Formula after unit propagation:\n";
            log(Fpp);//vektor vektor int
 
-       /* _f.clear();
+
+            //_f = toVectorSet(Fpp);
+            _f.clear();
+            _f = Fpp;
         //da se kastuje vektor vektor intova u vektor skup intova
-        for(std::vector<int> v : Fpp)
+       /* for(std::vector<int> v : Fpp)
             {   std::set<int> s(v.begin, v.end());
-                _f.insert(s);
+
+                _f.emplace(s);
             }
-*/
+        */
            return true;
             }
        else
