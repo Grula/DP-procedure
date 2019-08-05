@@ -23,6 +23,7 @@ public:
   formula & getFormula(){return _f;}
   literalSet & getLits(){return _literals;}
 
+
 private:
 	// Unit Propagate
 	bool _unitPropagate();
@@ -31,9 +32,10 @@ private:
 	bool _pureLiteral();
         bool _pureLiteral2();
 	// Variable Elimination
-	bool _resolution(clause &first, clause &second, literal p);
-
+        bool _resolution(clause &first, clause &second, literal p);
+        clause& _resolution2(clause &first, clause &second, literal p);
 	bool _eliminate(literal l);
+        bool _eliminate2(literal l);
 
 private:
 	unsigned _nClause = 0,

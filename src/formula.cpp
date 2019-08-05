@@ -8,7 +8,10 @@
 #include <unordered_map>
 #include <iostream>
 
-#include <range/v3/all.hpp>
+#include <range/v3/view.hpp>
+#include <range/v3/algorithm.hpp>
+#include <range/v3/action.hpp>
+
 
 using namespace ranges::v3;
 using namespace ranges;
@@ -17,6 +20,9 @@ using namespace ranges;
                     std::cout << v << ',';                     \
                    std::cout << '\n';        \
 });
+
+#define wcls(X) std::cout << '{'; for(auto val: X) std::cout  << val << ' '; std::cout << '}';
+
 
 
 bool intersection2(auto rng1,auto rng2){
@@ -85,9 +91,9 @@ bool Formula::DP()
 		// repeat = _unitPropagate();
 		// repeat = _pureLiteral() || repeat;
     }while(false);
-        /*for(literal l : _literals)
+     /*     for(literal l : _literals)
     {
-        if(unlikely(!_eliminate(l)))
+        if(unlikely(!_eliminate2(l)))
         {
             return false;
         }
@@ -176,7 +182,7 @@ bool Formula::_pureLiteral2()
                              | view::transform([](literal l){return -l;;})
                              );
     std::cout << pure << pos_only;
-    std::cout << intersection2(pos_only, pure);
+    //std::cout << intersection2(pos_only, pure);
     std::cout << "\n\n\n";
     log(_f);
 
@@ -272,7 +278,7 @@ bool Formula::_pureLiteral()
 	return found_pure;	
 
 }
-
+/*
 formula & toVectorSet(auto range){
 
     formula f;
@@ -287,7 +293,7 @@ formula & toVectorSet(auto range){
         }
     return f;
 }
-
+*/
 bool Formula::_unitPropagate2()
 {
     auto units = _f | view::transform([](auto s){
@@ -299,8 +305,15 @@ bool Formula::_unitPropagate2()
             | view::filter([](auto value){return value != 0;});
 
     std::cout << units;
+    /*std::set<literal> s1 = {1,2,3};
+    std::set<literal> s2 = {1,-2,3};
+    std::set<literal> s3 = _resolution2(s1,s2,2);
+   for(auto e: s3)
+       std::cout << e << '^';
 
-
+   std::cout << '\n';
+*/
+    _eliminate2(9);
     log(_f);
     auto Fp = _f | view::filter([&units](auto clause){
             return !intersection2(clause, units);
@@ -378,6 +391,7 @@ bool Formula::_unitPropagate2()
 };
 // Resolution
 // Returs true if clause after resolution is tautology
+
 bool Formula::_resolution(clause &first, clause &second, literal p)
 {
 	// Erase p from frist clause and ~p from second clause
@@ -391,8 +405,33 @@ bool Formula::_resolution(clause &first, clause &second, literal p)
 		if(first.find(-l) != first.end())
 			return true;
 	}
-	return false;
+        return false;
 };
+
+clause& Formula::_resolution2(clause &first, clause &second, literal p)
+{
+
+
+    //mozda ne treba ova provera
+    //auto it = ranges::find(c1,p);
+    //auto it2 = ranges::find(c2, -p);
+    //sta se desava ako klauze ne sadrze p i -p
+    clause *cres = new clause;
+    auto resolvent = view::concat(first, second)
+            | view::filter([&p](literal i){
+
+            if(i==p || i==(-p))
+            return false;
+            return true;});
+
+
+    ranges::for_each(resolvent, [cres](literal l){cres->insert(l);/*std::cout << l << '.';*/});
+    //std::vector<literal> v = resolvent | to_vector;
+    //ranges::for_each(cres, [](literal l){std::cout << l << '.';});
+    std::cout << '\n';
+    return *cres;
+};
+
 
 // Eliminate variable
 bool Formula::_eliminate(literal l)
@@ -430,7 +469,42 @@ bool Formula::_eliminate(literal l)
 			}
 		}
 	}
-	return true;
+        return true;
 }
+
+bool Formula::_eliminate2(literal p)
+{
+
+auto first = std::find_if(std::begin(_f), std::end(_f),[&p](clause c){return std::find(c.begin(), c.end(), p)!=std::end(c);});
+auto second = std::find_if(std::begin(_f), std::end(_f),[&p](clause c){return std::find(c.begin(), c.end(), -p)!=std::end(c);});
+
+std::cout << "*******";
+log(_f);
+if(first!=std::end(_f) && second!=std::end(_f)){
+    clause *newclause = new clause;
+
+    *newclause = _resolution2(*first, *second, p);
+
+    _f.push_back(*newclause);
+
+
+    if(first<second)
+    {
+            _f.erase(second);
+            _f.erase(first);
+        }else{
+            _f.erase(first);
+            _f.erase(second);
+        }
+}
+
+//kada se izbrise element ima manje elemenata i onda se promene pozicije
+log(_f);
+std::cout << "*********";
+
+
+};
+
+
 
 
