@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <iostream>
 
-// #define DEBUG 0	
+#define DEBUG 0	
 
 Formula::Formula()
 {};
@@ -120,7 +120,7 @@ bool Formula::_unitPropagate()
 	}
 	#ifdef DEBUG
 	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-	std::cout << "Unit propagation: " << found_unit ? ("True"):("False") << std::endl;
+	std::cout << "Unit propagation: " << (found_unit ? ("True"):("False")) << std::endl;
 	std::cout << "############################################" << std::endl;
 	#endif
 
@@ -195,7 +195,7 @@ bool Formula::_pureLiteral()
 	}
 	#ifdef DEBUG
 	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-	std::cout << "Pure literal: " << found_pure ? ("True"):("False") << std::endl;
+	std::cout << "Pure literal: " << (found_pure ? ("True"):("False")) << std::endl;
 	std::cout << "############################################" << std::endl;
 	#endif
 
