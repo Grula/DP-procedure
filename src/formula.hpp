@@ -21,7 +21,7 @@ public:
 	bool DP();
 	std::ostream & print(std::ostream & out)const;
   formula & getFormula(){return _f;}
-  literalSet & getLits(){return _literals;}
+  //literalSet & getLits(){return _literals;}
 
 
 private:
@@ -36,16 +36,20 @@ private:
         clause& _resolution2(clause &first, clause &second, literal p);
 	bool _eliminate(literal l);
         bool _eliminate2(literal l);
-
+        bool _getLiterals();
+        void _processClauses();
 private:
 	unsigned _nClause = 0,
 			 _nLiteral = 0;
 	formula _f;
 	literalSet _literals;
+        //std::vector<literal> _literals2;
 	std::unordered_map<unsigned, std::pair<unsigned, unsigned>> _literalsCount;
 
 
 
+        bool hasEmptyClause();
+        bool _checkClause(clause c);
 };
 
 

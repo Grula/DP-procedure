@@ -46,8 +46,9 @@ Formula::Formula(std::string fileName)
 {
 	_ReadDIMACS(fileName, &_nLiteral, &_nClause, _f);
 	_literalsCount.reserve(_nLiteral);
-
-	_literals.reserve(_nLiteral);
+        _literals.reserve(_nLiteral);
+        //std::cout << _nLiteral;
+        //_literals2.reserve(_nLiteral);
 	for(clause c : _f)
 	{
 		for(literal l : c)
@@ -84,22 +85,41 @@ std::ostream &Formula::print(std::ostream &out) const
 // DP procedure
 bool Formula::DP()
 {
-	// size_t formulaSize;
+        /*// size_t formulaSize;
         bool repeat = false; (void)repeat;
 	do{
-                repeat = _unitPropagate2() | _pureLiteral2();
+                _unitPropagate2()| _pureLiteral2();
 		// repeat = _unitPropagate();
 		// repeat = _pureLiteral() || repeat;
     }while(false);
-     /*     for(literal l : _literals)
+     for(literal l : _literals)
     {
-        if(unlikely(!_eliminate2(l)))
-        {
-            return false;
-        }
+        //if(unlikely(!_eliminate2(l)))
+        //{
+        //    return false;
+        //}
+
     }
 */
-        return true;
+    do{
+        //ako je _f prazna vrati true
+         if(_f.size()==0)
+             return true;
+         if(hasEmptyClause())
+             return false;
+
+          _unitPropagate2();
+         _pureLiteral2();
+
+         _getLiterals();
+
+         for(literal l: _literals){
+                 _eliminate2(l);
+             }
+
+
+        }while(true);
+
 }
 
 
@@ -197,6 +217,7 @@ bool Formula::_pureLiteral2()
         _f.clear();
         _f = rngf;
         log(_f);
+
         return true;
     }else
         return false;
@@ -278,22 +299,7 @@ bool Formula::_pureLiteral()
 	return found_pure;	
 
 }
-/*
-formula & toVectorSet(auto range){
 
-    formula f;
-    f.reserve(range.size());
-    for(std::vector<literal> v : range){
-            std::set<literal> s;
-            //s.reserve(v.size());
-            for(literal l: v)
-                s.insert(l);
-
-            f.push_back(s);
-        }
-    return f;
-}
-*/
 bool Formula::_unitPropagate2()
 {
     auto units = _f | view::transform([](auto s){
@@ -313,7 +319,7 @@ bool Formula::_unitPropagate2()
 
    std::cout << '\n';
 */
-    _eliminate2(9);
+    //std::cout << "eliminate" << _eliminate2(-3);
     log(_f);
     auto Fp = _f | view::filter([&units](auto clause){
             return !intersection2(clause, units);
@@ -348,7 +354,7 @@ bool Formula::_unitPropagate2()
                 }
 
 
-                }
+                } std::cout << "Stampam " << s.size() << "****\n";
                return s;
 
 /*
@@ -370,9 +376,7 @@ bool Formula::_unitPropagate2()
            std::cout << "Formula after unit propagation:\n";
            log(Fpp);//vektor vektor int
 
-
-            //_f = toVectorSet(Fpp);
-            _f.clear();
+            _f.clear(); //da li ovo zadrzava prazne skupove
             _f = Fpp;
         //da se kastuje vektor vektor intova u vektor skup intova
        /* for(std::vector<int> v : Fpp)
@@ -472,39 +476,83 @@ bool Formula::_eliminate(literal l)
         return true;
 }
 
+//vraca false ako je dodata prazna klauza, true ako je dodata ok klauza
 bool Formula::_eliminate2(literal p)
 {
 
 auto first = std::find_if(std::begin(_f), std::end(_f),[&p](clause c){return std::find(c.begin(), c.end(), p)!=std::end(c);});
 auto second = std::find_if(std::begin(_f), std::end(_f),[&p](clause c){return std::find(c.begin(), c.end(), -p)!=std::end(c);});
 
-std::cout << "*******";
+std::cout << "eliminate" << p << '\n';
 log(_f);
 if(first!=std::end(_f) && second!=std::end(_f)){
     clause *newclause = new clause;
 
     *newclause = _resolution2(*first, *second, p);
-
-    _f.push_back(*newclause);
+    if(newclause->size()==0)return false;
+    if(!_checkClause(*newclause)){
+            _f.push_back(*newclause);
+        }
 
 
     if(first<second)
-    {
+        {
             _f.erase(second);
             _f.erase(first);
         }else{
             _f.erase(first);
             _f.erase(second);
         }
+
+    }
+
+log(_f);
+return false;
 }
 
-//kada se izbrise element ima manje elemenata i onda se promene pozicije
-log(_f);
-std::cout << "*********";
+//vraca true ako je nastalo izmene
+bool Formula::_getLiterals()
+{
+    unsigned previous = _literals.size();
+    auto pos2 = _f | view::join;// | to_vector | action::sort | action::unique;
+    _literals.clear();
+    for(auto val: pos2)
+        _literals.insert(val);
+
+    return previous != _literals.size();
+}
 
 
+//treba uraditi
+void Formula::_processClauses()
+{
+    //eliminise sve klauze koje imaju suprotne literale
+
+    _f.erase(std::remove_if(_f.begin(), _f.end(), [](auto c){
+
+         //dato je c vratiti da li klauza sadrzi l i -l
+        return true;
+        }),std::end(_f));
 };
 
 
+
+bool Formula::hasEmptyClause(){
+    return ranges::any_of(_f, [](clause c){return c.size()==0;});
+}
+
+//O(n log n) u prosecnom slucaju zbog sorta
+bool Formula::_checkClause(clause c){
+    auto eq = [](auto val1, auto val2){return val1==val2;};
+
+
+auto rng = c | view::all | view::transform([](literal l){return std::abs(l);})
+             | to_vector
+        | action::sort;
+auto rng2 = rng | view::group_by(eq);
+//std::cout << rng2;
+return ranges::any_of(rng2, [](auto r){return (r | to_vector).size() > 1;});
+
+}
 
 
