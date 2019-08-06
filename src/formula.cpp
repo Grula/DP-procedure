@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <iostream>
 
+// #define DEBUG 0	
+
 Formula::Formula()
 {};
 
@@ -45,7 +47,7 @@ std::ostream &Formula::print(std::ostream &out) const
 
     out << '}' << '\n';
         }
-    out << '}';
+    out << '}' << std::endl;
     return out;
 };
 
@@ -53,22 +55,31 @@ std::ostream &Formula::print(std::ostream &out) const
 // DP procedure
 bool Formula::DP()
 {
+	#ifdef DEBUG
+	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+	print(std::cout);
+	std::cout << std::endl;
+	std::cout << "############################################" << std::endl;
+	#endif
 	// size_t formulaSize;
 	bool repeat = false;
 	do{
+
 		repeat = _unitPropagate() | _pureLiteral();
 		// repeat = _unitPropagate();
 		// repeat = _pureLiteral() || repeat;
+
+
     }while(repeat);
 	for(literal l : _literals)
-    {
+	{
         if(!_eliminate(l))
         {
             return false;
         }
-    }
+	}
 
-        return true;
+    return true;
 }
 
 
@@ -107,7 +118,11 @@ bool Formula::_unitPropagate()
 			start = _f.begin();
 		}
 	}
-	// std::cout << "Unit prop " << found_unit << std::endl;
+	#ifdef DEBUG
+	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+	std::cout << "Unit propagation: " << found_unit ? ("True"):("False") << std::endl;
+	std::cout << "############################################" << std::endl;
+	#endif
 
 	return found_unit;
 };
@@ -178,7 +193,12 @@ bool Formula::_pureLiteral()
 			found_pure = true;
 		}
 	}
-	// std::cout << "Pure lit " << found_pure << std::endl;
+	#ifdef DEBUG
+	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+	std::cout << "Pure literal: " << found_pure ? ("True"):("False") << std::endl;
+	std::cout << "############################################" << std::endl;
+	#endif
+
 
 	return found_pure;	
 
@@ -215,25 +235,36 @@ bool Formula::_eliminate(literal l)
 				// Check if given answer is not tautology
 				if(!_resolution(_f[i], _f[j], l))
 				{
+					// erase second clause 
 					_f.erase(_f.begin() + (j - 1));
-					// Check if clause is empty
+					// Check if clause is empty ( containted only p and ~p)
 					if(_f[i].size() == 0)
 					{
-						// Erase first caluse and return false
+						// Erase first caluse
 						_f.erase(_f.begin() + i);
+						// Empty clause - so formula is unsat
 						return false;
 					}
 				}
-				// Clause is tautology so delete first and second clause
+				// Clause is tautology
+				// delete first and second clause
 				else 
 				{
+					#ifdef DEBUG
+			    	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+			    	std::cout << "############## _eliminate() ##############" << std::endl;
+			    	std::cout << "Formula size : " <<_f.size() << std::endl;
+			    	#endif
+
 					_f.erase(_f.begin() + i);
 					_f.erase(_f.begin() + (j - 1));
-				}
-				// for(literal l : _f[i])
-				// {
-				// 	std::cout << l << " ";
-				// }				
+					
+					#ifdef DEBUG
+			    	std::cout <<  "Formula size : " << _f.size() << std::endl;
+			    	std::cout << "############################################" << std::endl;
+			    	#endif
+
+				}				
 			}
 		}
 	}

@@ -17,6 +17,9 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
     //std::regex confx("(\\s)*p(\\s)*cnf(\\s)*[0-9]+(\\s)*[0-9]+(\\s)*");
    // std::regex commentx("(\\s)*c(.*)");
     std::regex cnfclausx("(\\s)*(((-)?[0-9]+)\\s)+0");
+	
+	// [\t\r\n\f\s] - ukljucuje sve beline (white space, tab, newline, ....) 
+    // std::regex cnfclausx("(\\s)*(((-)?[0-9]+)[\\t\\r\\n\\f\\s])+0");
 
 		std::string line;
 		_file.open(fileName);
