@@ -85,40 +85,27 @@ std::ostream &Formula::print(std::ostream &out) const
 // DP procedure
 bool Formula::DP()
 {
-        /*// size_t formulaSize;
-        bool repeat = false; (void)repeat;
-	do{
-                _unitPropagate2()| _pureLiteral2();
-		// repeat = _unitPropagate();
-		// repeat = _pureLiteral() || repeat;
-    }while(false);
-     for(literal l : _literals)
-    {
-        //if(unlikely(!_eliminate2(l)))
-        //{
-        //    return false;
-        //}
 
-    }
-*/
-    do{
+    _getLiterals();bool repeat;
+    do {repeat = _unitPropagate2() || _pureLiteral2();
+    }while(repeat);
+
         //ako je _f prazna vrati true
          if(_f.size()==0)
              return true;
-         if(hasEmptyClause())
-             return false;
+         //if(hasEmptyClause())
+         //    return false;
 
-          _unitPropagate2();
-         _pureLiteral2();
-
-         _getLiterals();
-
+            _getLiterals();
          for(literal l: _literals){
-                 _eliminate2(l);
+            //ako eliminate izvede praznu klauzu, vratiti unsat
+                bool isClauseEmpty = _eliminate2(l);
+                if(isClauseEmpty)
+                    return false;
+                if(_f.size()==0)
+                    return true;
              }
-
-
-        }while(true);
+         return true;
 
 }
 
@@ -350,11 +337,14 @@ bool Formula::_unitPropagate2()
 
                auto it = std::find(s.begin(), s.end(), l);
                if(it!=std::end(s)){
-                    s.erase(it);
+                //std::cout << "before";wcls(s);
+                 s.erase(it);
+                //std::cout << "after";wcls(s);
                 }
 
 
-                } std::cout << "Stampam " << s.size() << "****\n";
+                }
+               if(s.size()==0) std::cout << "\nPrazna je\n";
                return s;
 
 /*
@@ -489,7 +479,7 @@ if(first!=std::end(_f) && second!=std::end(_f)){
     clause *newclause = new clause;
 
     *newclause = _resolution2(*first, *second, p);
-    if(newclause->size()==0)return false;
+    if(newclause->size()==0) {std::cout << "Prazna je!"; return true;}
     if(!_checkClause(*newclause)){
             _f.push_back(*newclause);
         }
