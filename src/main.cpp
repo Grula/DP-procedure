@@ -16,21 +16,6 @@
 
 #include "formula.hpp"
 
-/*#define log(X) ranges::for_each(X, [](auto s){ for (auto v: s) \
-                    std::cout << v << ',';                     \
-                   std::cout << '\n';        \
-});
-*/
-/*bool intersection2(auto rng1, auto rng2){
-    bool exists;
-    ranges::for_each(rng1, [&exists, &rng2](literal l){
-        exists = ranges::count(rng2, l)>0;
-        //std::cout << !exists << 'E';
-        });
-    return exists;
-}
-
-*/
 
 
 #include <chrono>
@@ -43,10 +28,6 @@ int main(int argc, char const *argv[]){
         auto start = std::chrono::steady_clock::now();
 
         Formula f(argv[1]);
-
-        clause c{1,2,3,4};
-        //ranges::for_each(c, [](literal l){std::cout << l << '.';});
-
 
 
         if(f.DP())

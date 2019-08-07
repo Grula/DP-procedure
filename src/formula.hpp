@@ -26,18 +26,18 @@ public:
 
 private:
 	// Unit Propagate
-	bool _unitPropagate();
+
         bool _unitPropagate2();
 	// Pure Literal
-	bool _pureLiteral();
+
         bool _pureLiteral2();
 	// Variable Elimination
-        bool _resolution(clause &first, clause &second, literal p);
+
         clause& _resolution2(clause &first, clause &second, literal p);
-	bool _eliminate(literal l);
+
         bool _eliminate2(literal l);
         bool _getLiterals();
-        void _processClauses();
+
 private:
 	unsigned _nClause = 0,
 			 _nLiteral = 0;
@@ -50,6 +50,7 @@ private:
 
         bool hasEmptyClause();
         bool _checkClause(clause c);
+        void _checkIfClauseExists();
 };
 
 

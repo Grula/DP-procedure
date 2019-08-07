@@ -13,6 +13,10 @@
 #include <range/v3/action.hpp>
 
 
+
+
+
+
 using namespace ranges::v3;
 using namespace ranges;
 
@@ -24,11 +28,10 @@ using namespace ranges;
 #define wcls(X) std::cout << '{'; for(auto val: X) std::cout  << val << ' '; std::cout << '}';
 
 
+#define DEBUG 1
 
 bool intersection2(auto rng1,auto rng2){
     bool exists = false;
-    //std::vector<literal> r1 = rng1 | to_vector;
-    //std::vector<literal> r2 = rng2 | to_vector;
 
     for(literal l: rng1){
         if(ranges::find(rng2, l) != ranges::end(rng2))
@@ -75,9 +78,9 @@ std::ostream &Formula::print(std::ostream &out) const
             lit++;
         }
 
-    out << '}' << '\n';
-        }
     out << '}';
+        }
+    out << '}' << '\n';
     return out;
 };
 
@@ -93,8 +96,6 @@ bool Formula::DP()
         //ako je _f prazna vrati true
          if(_f.size()==0)
              return true;
-         //if(hasEmptyClause())
-         //    return false;
 
             _getLiterals();
          for(literal l: _literals){
@@ -110,49 +111,12 @@ bool Formula::DP()
 }
 
 
-
-// Unit Propagate
-bool Formula::_unitPropagate()
-{
-	bool found_unit = false;
-
-	for(auto start = _f.begin(); start != _f.end(); start++)
-	{
-		if((*start).size() == 1)
-		{
-			// Get single literal
-			literal l = *(*start).begin();
-			// Remove other clauses that contain given literal
-			_f.erase(
-				std::remove_if(_f.begin(),_f.end(),
-						  	  [=] (clause c) {
-						  	  	return c.count(l) > 0;
-						  	  }
-						    ),
-				std::end(_f)
-			);
-
-			// Remove oposite literal from clauses that contains it
-			for(auto rStart = _f.begin(); rStart != _f.end(); rStart++)
-			{
-				auto opositeLiteral = (*rStart).find(-l);
-				if( opositeLiteral != (*rStart).end() )
-				{
-					(*rStart).erase(opositeLiteral);
-				}
-			}
-			found_unit = true;
-			start = _f.begin();
-		}
-	}
-	// std::cout << "Unit prop " << found_unit << std::endl;
-
-        return found_unit;
-}
-
 bool Formula::_pureLiteral2()
 {
-    //uzimamo samo pozitivne literale
+#ifdef DEBUG
+    std::cout << "Begin:Pure literal\n";
+#endif
+
     auto pos = _literals | view::filter([](literal l){return l>0;});
 
     auto pos2 = _f | view::join | to_vector | action::sort | action::unique;
@@ -188,104 +152,35 @@ bool Formula::_pureLiteral2()
                              neg_only
                              | view::transform([](literal l){return -l;;})
                              );
-    std::cout << pure << pos_only;
-    //std::cout << intersection2(pos_only, pure);
-    std::cout << "\n\n\n";
-    log(_f);
-
 
     auto rngf = _f | view::filter([&pure](auto s){
             return !intersection2(s, pure);
         })
             | to_vector;
 
+#ifdef DEBUG
+    std::cout << "Pure literals:"; std::cout << pure; std::cout << '\n';
+    std::cout << "Formula before:"; print(std::cout); std::cout << '\n';
+#endif
+
     if(pure){
-        std::cout << "After pure literal!" << std::endl;
-        _f.clear();
+         _f.clear();
         _f = rngf;
-        log(_f);
 
+#ifdef DEBUG
+    std::cout << "Formula after:"; print(std::cout); std::cout << '\n';
+#endif
         return true;
-    }else
+    }else{
         return false;
-
-};
-
-// Pure Literal
-bool Formula::_pureLiteral()
-{
-	bool found_pure = false;
-	_literalsCount.clear(); // try to fill this just once
-	for(clause c : _f )
-	{	
-		for(literal l : c)
-		{
-			if(_literalsCount.count(std::abs(l)) == 0)
-			{
-				if( l > 0)
-				{
-					_literalsCount.insert({std::abs(l), {1,0}});
-				}
-				else
-				{
-					_literalsCount.insert({std::abs(l), {0,1}});
-				}
-
-			}
-			else
-			{
-				// Auto - iterator
-				auto pairs = _literalsCount.find(std::abs(l));
-				if(l > 0)
-				{
-					(*pairs).second.first++;
-				}
-				else
-				{
-					(*pairs).second.second++;
-				}
-			}
-		}	
-
-	}
-	// for(clause c : _f)
-	// {
-	// 	for(literal l : c)
-	// 	{
-	// 		std::cout << l << " ";
-	// 	}
-	// 	std::cout << std::endl;
-	// }
-	// std::cout << "edning f" << std::endl;
-	for(auto start = _literalsCount.begin(); start != _literalsCount.end(); start++)
-	{	
-		int key = 0;
-		if( (*start).second.first != 0 && (*start).second.second == 0)
-		{
-			key = (*start).first;
-		}
-		else if ((*start).second.second != 0 && (*start).second.first == 0)
-		{
-			key = -(*start).first;
-		}
-
-		if(key != 0)
-		{
-			_f.erase(
-				std::remove_if(_f.begin(),_f.end(),
-						  [=] (clause c) {
-						  	return c.count(key) > 0;
-						  }),
-				std::end(_f)
-			);
-			found_pure = true;
-		}
-	}
-	// std::cout << "Pure lit " << found_pure << std::endl;
-
-	return found_pure;	
-
+#ifdef DEBUG
+    std::cout << "Formula after:"; print(std::cout); std::cout << '\n';
+    std::cout << "End:Pure literal\n";
+#endif
 }
+
+    };
+
 
 bool Formula::_unitPropagate2()
 {
@@ -297,33 +192,14 @@ bool Formula::_unitPropagate2()
         })
             | view::filter([](auto value){return value != 0;});
 
-    std::cout << units;
-    /*std::set<literal> s1 = {1,2,3};
-    std::set<literal> s2 = {1,-2,3};
-    std::set<literal> s3 = _resolution2(s1,s2,2);
-   for(auto e: s3)
-       std::cout << e << '^';
+#ifdef DEBUG
+    std::cout << "Begin:Unit propagate\nUnit literals:"; std::cout << units; std::cout << '\n';
+    std::cout << "Formula before:"; print(std::cout);
+#endif
 
-   std::cout << '\n';
-*/
-    //std::cout << "eliminate" << _eliminate2(-3);
-    log(_f);
     auto Fp = _f | view::filter([&units](auto clause){
             return !intersection2(clause, units);
         });
-
-    /*auto intersection = [](auto rng1, auto rng2){
-            bool exists;
-            ranges::for_each(rng1, [&exists, &rng2](literal l){
-                exists = ranges::count(rng2, l)>0;
-               // std::cout << !exists << 'E';
-                });
-            return exists;
-
-        };
-*/
-
-        //log(Fp);
 
        //sad izbacujemo svaki element iz unitsa samo sa suprotnim znakom
        auto neg_units = units | view::transform([](literal unit){return -unit;});
@@ -337,30 +213,17 @@ bool Formula::_unitPropagate2()
 
                auto it = std::find(s.begin(), s.end(), l);
                if(it!=std::end(s)){
-                //std::cout << "before";wcls(s);
                  s.erase(it);
-                //std::cout << "after";wcls(s);
                 }
 
 
                 }
-               if(s.size()==0) std::cout << "\nPrazna je\n";
+               if(s.size()==0)
+                    std::cout << "Empty clause found!";
                return s;
 
-/*
-               auto ts = s
-               | view::transform([&neg_units](literal l){
-               if(ranges::count(neg_units, l) > 0)
-                    return 0;
-               else
-                    return l;
-               })
-               | view::filter([](literal l){return l!=0;})
-               ;
-               return ts | to_vector;*/
                })
                | to_vector;
-
 
         if(units){
            std::cout << "Formula after unit propagation:\n";
@@ -368,48 +231,33 @@ bool Formula::_unitPropagate2()
 
             _f.clear(); //da li ovo zadrzava prazne skupove
             _f = Fpp;
-        //da se kastuje vektor vektor intova u vektor skup intova
-       /* for(std::vector<int> v : Fpp)
-            {   std::set<int> s(v.begin, v.end());
+#ifdef DEBUG
+    std::cout << "Formula after:"; print(std::cout);
+    std::cout << "End unit propagation\n";
+#endif
 
-                _f.emplace(s);
-            }
-        */
+
            return true;
             }
-       else
-            return false;
-       //   std::cout << 'R' << ranges::size(Fpp)<< 'R';
-        //kastujem u vektor skupova
+       else {
+#ifdef DEBUG
+    std::cout << "Formula after:"; print(std::cout);
+    std::cout << "End unit propagation\n";
+#endif
+              return false;
+
+}
+
 
 };
 // Resolution
 // Returs true if clause after resolution is tautology
 
-bool Formula::_resolution(clause &first, clause &second, literal p)
-{
-	// Erase p from frist clause and ~p from second clause
-	first.erase(first.find(p));
-	second.erase(second.find(-p));
-
-	first.merge(second);
-	// Search if exists q and ~q
-	for(literal l : first)
-	{
-		if(first.find(-l) != first.end())
-			return true;
-	}
-        return false;
-};
 
 clause& Formula::_resolution2(clause &first, clause &second, literal p)
 {
 
 
-    //mozda ne treba ova provera
-    //auto it = ranges::find(c1,p);
-    //auto it2 = ranges::find(c2, -p);
-    //sta se desava ako klauze ne sadrze p i -p
     clause *cres = new clause;
     auto resolvent = view::concat(first, second)
             | view::filter([&p](literal i){
@@ -420,66 +268,29 @@ clause& Formula::_resolution2(clause &first, clause &second, literal p)
 
 
     ranges::for_each(resolvent, [cres](literal l){cres->insert(l);/*std::cout << l << '.';*/});
-    //std::vector<literal> v = resolvent | to_vector;
-    //ranges::for_each(cres, [](literal l){std::cout << l << '.';});
-    std::cout << '\n';
+//    std::cout << '\n';
     return *cres;
 };
 
 
-// Eliminate variable
-bool Formula::_eliminate(literal l)
-{
-	for (size_t i = 0; i < _f.size(); i++)
-	{
-		for(size_t j = i + 1; j < _f.size(); j++)
-		{
-			// Check if our clauses contains given literals
-			if(_f[i].find(l) != _f[i].end() && _f[j].find(-l) != _f[j].end())
-			{
-
-				// Check if given answer is not tautology
-				if(!_resolution(_f[i], _f[j], l))
-				{
-					_f.erase(_f.begin() + (j - 1));
-					// Check if clause is empty
-					if(_f[i].size() == 0)
-					{
-						// Erase first caluse and return false
-						_f.erase(_f.begin() + i);
-						return false;
-					}
-				}
-				// Clause is tautology so delete first and second clause
-				else 
-				{
-					_f.erase(_f.begin() + i);
-					_f.erase(_f.begin() + (j - 1));
-				}
-				// for(literal l : _f[i])
-				// {
-				// 	std::cout << l << " ";
-				// }				
-			}
-		}
-	}
-        return true;
-}
 
 //vraca false ako je dodata prazna klauza, true ako je dodata ok klauza
 bool Formula::_eliminate2(literal p)
 {
+#ifdef DEBUG
+std::cout << "Begin: Elimination by variable:" << p << '\n';
+std::cout << "Formula before"; print(std::cout);
+#endif
 
 auto first = std::find_if(std::begin(_f), std::end(_f),[&p](clause c){return std::find(c.begin(), c.end(), p)!=std::end(c);});
 auto second = std::find_if(std::begin(_f), std::end(_f),[&p](clause c){return std::find(c.begin(), c.end(), -p)!=std::end(c);});
 
-std::cout << "eliminate" << p << '\n';
-log(_f);
+
 if(first!=std::end(_f) && second!=std::end(_f)){
     clause *newclause = new clause;
 
     *newclause = _resolution2(*first, *second, p);
-    if(newclause->size()==0) {std::cout << "Prazna je!"; return true;}
+    if(newclause->size()==0) {std::cout << "Empty clause found in resolution."; return true;}
     if(!_checkClause(*newclause)){
             _f.push_back(*newclause);
         }
@@ -495,16 +306,18 @@ if(first!=std::end(_f) && second!=std::end(_f)){
         }
 
     }
+#ifdef DEBUG
+std::cout << "Formula after:"; print(std::cout);
+std::cout << "End: Elimination by variable:" << p << '\n';
 
-log(_f);
+#endif
 return false;
 }
 
-//vraca true ako je nastalo izmene
 bool Formula::_getLiterals()
 {
     unsigned previous = _literals.size();
-    auto pos2 = _f | view::join;// | to_vector | action::sort | action::unique;
+    auto pos2 = _f | view::join;
     _literals.clear();
     for(auto val: pos2)
         _literals.insert(val);
@@ -512,37 +325,19 @@ bool Formula::_getLiterals()
     return previous != _literals.size();
 }
 
-
-//treba uraditi
-void Formula::_processClauses()
-{
-    //eliminise sve klauze koje imaju suprotne literale
-
-    _f.erase(std::remove_if(_f.begin(), _f.end(), [](auto c){
-
-         //dato je c vratiti da li klauza sadrzi l i -l
-        return true;
-        }),std::end(_f));
-};
-
-
-
-bool Formula::hasEmptyClause(){
-    return ranges::any_of(_f, [](clause c){return c.size()==0;});
-}
-
-//O(n log n) u prosecnom slucaju zbog sorta
+//Checks if clause exists or is always true
 bool Formula::_checkClause(clause c){
     auto eq = [](auto val1, auto val2){return val1==val2;};
-
-
-auto rng = c | view::all | view::transform([](literal l){return std::abs(l);})
+    auto rng = c | view::all | view::transform([](literal l){return std::abs(l);})
              | to_vector
         | action::sort;
-auto rng2 = rng | view::group_by(eq);
-//std::cout << rng2;
-return ranges::any_of(rng2, [](auto r){return (r | to_vector).size() > 1;});
 
+
+    auto rng2 = rng | view::group_by(eq);
+
+    bool exists = ranges::any_of(_f, [&c](clause i){return i==c;});
+    if(exists) {std::cout << "Clause "; wcls(c); std::cout << "already exists\n";return true;}
+
+    return ranges::any_of(rng2, [](auto r){return (r | to_vector).size() > 1;});
 }
-
 
