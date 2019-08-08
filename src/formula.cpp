@@ -8,8 +8,9 @@
 #include <unordered_map>
 #include <iostream>
 
-#define DEBUG 0	
+//#define DEBUG
 
+#define PRINT 1
 Formula::Formula()
 {};
 
@@ -45,9 +46,9 @@ std::ostream &Formula::print(std::ostream &out) const
             lit++;
         }
 
-    out << '}' << '\n';
+    out << '}';
         }
-    out << '}' << std::endl;
+    out << '}' << '\n';
     return out;
 };
 
@@ -88,6 +89,9 @@ bool Formula::DP()
 bool Formula::_unitPropagate()
 {
 	bool found_unit = false;
+#ifdef PRINT
+      std::cout << "Begin: Unit propagate\nFormula:";print(std::cout);
+#endif
 
 	for(auto start = _f.begin(); start != _f.end(); start++)
 	{
@@ -124,12 +128,26 @@ bool Formula::_unitPropagate()
 	std::cout << "############################################" << std::endl;
 	#endif
 
+#ifdef PRINT
+        print(std::cout);
+      std::cout << "End: Unit propagate\n";
+#endif
+
+
+
 	return found_unit;
+
+
 };
 
 // Pure Literal
 bool Formula::_pureLiteral()
 {
+#ifdef PRINT
+      std::cout << "Begin: Pure literal\nFormula:";print(std::cout);
+#endif
+
+
 	bool found_pure = false;
 	_literalsCount.clear(); // try to fill this just once
 	// if(_literalsCount.size() == 0)
@@ -198,6 +216,10 @@ bool Formula::_pureLiteral()
 	std::cout << "Pure literal: " << (found_pure ? ("True"):("False")) << std::endl;
 	std::cout << "############################################" << std::endl;
 	#endif
+#ifdef PRINT
+        print(std::cout);
+        std::cout << "End: Unit propagate\n";
+#endif
 
 
 	return found_pure;	
