@@ -10,7 +10,7 @@
 
 //#define DEBUG
 
-#define PRINT 1
+//#define PRINT 1
 Formula::Formula()
 {};
 
@@ -66,18 +66,26 @@ bool Formula::DP()
 	bool repeat = false;
 	do{
 
-		repeat = _unitPropagate() | _pureLiteral();
+                repeat = _unitPropagate() | _pureLiteral();
 		// repeat = _unitPropagate();
 		// repeat = _pureLiteral() || repeat;
 
 
     }while(repeat);
+
+
 	for(literal l : _literals)
 	{
         if(!_eliminate(l))
         {
+
+
             return false;
+
         }
+
+        if(_f.size()==0)
+            return true;//if vector is empty
 	}
 
     return true;
@@ -128,12 +136,10 @@ bool Formula::_unitPropagate()
 	std::cout << "############################################" << std::endl;
 	#endif
 
-#ifdef PRINT
-        print(std::cout);
-      std::cout << "End: Unit propagate\n";
-#endif
-
-
+//#ifdef PRINT
+//        print(std::cout);
+//      std::cout << "End: Unit propagate\n";
+//#endif
 
 	return found_unit;
 
@@ -143,9 +149,9 @@ bool Formula::_unitPropagate()
 // Pure Literal
 bool Formula::_pureLiteral()
 {
-#ifdef PRINT
-      std::cout << "Begin: Pure literal\nFormula:";print(std::cout);
-#endif
+//#ifdef PRINT
+//      std::cout << "Begin: Pure literal\nFormula:";print(std::cout);
+//#endif
 
 
 	bool found_pure = false;
@@ -216,10 +222,7 @@ bool Formula::_pureLiteral()
 	std::cout << "Pure literal: " << (found_pure ? ("True"):("False")) << std::endl;
 	std::cout << "############################################" << std::endl;
 	#endif
-#ifdef PRINT
-        print(std::cout);
-        std::cout << "End: Unit propagate\n";
-#endif
+
 
 
 	return found_pure;	
@@ -246,10 +249,12 @@ bool Formula::_resolution(clause &first, clause &second, literal p)
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
+    //std::cout << "eliminate by variable " << l <<  '\n';
 	for (size_t i = 0; i < _f.size(); i++)
 	{
 		for(size_t j = i + 1; j < _f.size(); j++)
 		{
+
 			// Check if our clauses contains given literals
 			if(_f[i].find(l) != _f[i].end() && _f[j].find(-l) != _f[j].end())
 			{
@@ -273,18 +278,21 @@ bool Formula::_eliminate(literal l)
 				else 
 				{
 					#ifdef DEBUG
-			    	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-			    	std::cout << "############## _eliminate() ##############" << std::endl;
-			    	std::cout << "Formula size : " <<_f.size() << std::endl;
-			    	#endif
+                                //std::cout << "############## DEBUG PRINTING ##############" << std::endl;
 
+                                std::cout << "Formula size : " <<_f.size() << '\n';
+			    	#endif
+                                if(i< (j-1)){
 					_f.erase(_f.begin() + i);
 					_f.erase(_f.begin() + (j - 1));
-					
-					#ifdef DEBUG
-			    	std::cout <<  "Formula size : " << _f.size() << std::endl;
-			    	std::cout << "############################################" << std::endl;
-			    	#endif
+                                             }
+                                else{
+                                        _f.erase(_f.begin() + (j-1));
+                                        _f.erase(_f.begin() + i);
+                                    }
+
+
+
 
 				}				
 			}
