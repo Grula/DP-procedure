@@ -20,8 +20,9 @@ int main(int argc, char const *argv[]){
 	auto start = std::chrono::steady_clock::now();
 
 	Formula f(argv[1]);
+        f.print(std::cout);
 
-	if(f.DP())
+        /*if(f.DP())
 	{
 		std::cout << "-------------------" << std::endl;
 		std::cout << "--- SATISFIABLE ---" << std::endl;
@@ -34,7 +35,7 @@ int main(int argc, char const *argv[]){
 		std::cout << "--- UNSATISFIABLE ---" << std::endl;
 		std::cout << "---------------------" << std::endl;
 	}
-
+*/
 	auto end = std::chrono::steady_clock::now();
 	std::cout << "Elapsed time in miliseconds : " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
     // f.print(std::cout);
