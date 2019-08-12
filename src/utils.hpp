@@ -30,7 +30,7 @@ private:
 	 * Checking first line of DIMACS file
 	 */
 	bool _splitAndCheck(const std::string& str, unsigned *nLiteral, unsigned *nClause);
-	void _fillClause(const std::string &s, clause &c);
+        void _fillClause( std::string &s, clause &c);
 };
 
 

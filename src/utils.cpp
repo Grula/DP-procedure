@@ -5,7 +5,7 @@
 #include <regex>
 #include <vector>
 #include <set>
-
+#include <string>
 #include "utils.hpp"
 
 
@@ -13,13 +13,7 @@ _ReadDIMACS::_ReadDIMACS()
 	{};
 
 _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nClause, formula &f)
-	{
-    //std::regex confx("(\\s)*p(\\s)*cnf(\\s)*[0-9]+(\\s)*[0-9]+(\\s)*");
-   // std::regex commentx("(\\s)*c(.*)");
-    std::regex cnfclausx("(\\s)*(((-)?[0-9]+)\\s)+0");
-	
-	// [\t\r\n\f\s] - ukljucuje sve beline (white space, tab, newline, ....) 
-    // std::regex cnfclausx("(\\s)*(((-)?[0-9]+)[\\t\\r\\n\\f\\s])+0");
+        {
 
 		std::string line;
 		_file.open(fileName);
@@ -32,14 +26,11 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
 	  		}
 			while ( std::getline (_file,line) )
 			{
-                                //take only correct clauses
-                                if (std::regex_match(line, cnfclausx)){
                                         clause c;
-                                        // std::cout << line << '\n';
+                        //                std::cout << line << '\n';
                                         _fillClause(line, c);
                                         f.push_back(c);
-                                    }
-			}
+                        }
 
 			_file.close();
 		}
@@ -72,11 +63,24 @@ bool _ReadDIMACS::_splitAndCheck(const std::string& str, unsigned *nLiteral, uns
 	return true;
 };
 
-void _ReadDIMACS::_fillClause(const std::string &s, clause &c) 
+void _ReadDIMACS::_fillClause(std::string &s, clause &c)
 {
-	std::stringstream ss(s);
-	std::string literal;
+        std::regex litexp("[-]?(\\d)+");
 
+        std::regex_token_iterator<std::string::iterator> rti ( s.begin(), s.end(), litexp);
+        std::regex_token_iterator<std::string::iterator> rend;
+        while (rti!=rend){
+              int l = std::stoi(*rti);
+
+              if(l!=0)
+
+                  {
+                      //std::cout << '[' << l << ']';
+                      c.insert(l);
+                  }
+            rti++;
+            }
+/*
 	while(std::getline(ss, literal, ' '))
 	{
 		int l = std::stoi(literal);
@@ -84,16 +88,5 @@ void _ReadDIMACS::_fillClause(const std::string &s, clause &c)
 			break;
 		c.insert(l);
 	}
+*/
 };
-
-
-
-
-
-
-
-
-
-
-
-
