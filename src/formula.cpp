@@ -32,24 +32,24 @@ Formula::Formula(std::string fileName)
 
 std::ostream &Formula::print(std::ostream &out) const
 {
-    out << '{';
-    for(clause c: _f){
-    out << '{';
-    auto lit = c.cbegin();
-    auto litend = c.cend();
+	out << '{';
+	for(clause c: _f){
+	out << '{';
+	auto lit = c.cbegin();
+	auto litend = c.cend();
 
-    while(lit!=litend){
-            out << (*lit);
-          if (std::prev(litend) != lit)
-              out << ',';
+	while(lit!=litend){
+			out << (*lit);
+		  if (std::prev(litend) != lit)
+			  out << ',';
 
-            lit++;
-        }
+			lit++;
+		}
 
-    out << '}';
-        }
-    out << '}' << '\n';
-    return out;
+	out << '}';
+		}
+	out << '}' << '\n';
+	return out;
 };
 
 
@@ -66,29 +66,27 @@ bool Formula::DP()
 	bool repeat = false;
 	do{
 
-                repeat = _unitPropagate() | _pureLiteral();
+				repeat = _unitPropagate() | _pureLiteral();
 		// repeat = _unitPropagate();
 		// repeat = _pureLiteral() || repeat;
 
 
-    }while(repeat);
+	}while(repeat);
 
 
 	for(literal l : _literals)
 	{
-        if(!_eliminate(l))
-        {
+		if(!_eliminate(l))
+		{
+			return false;
 
+		}
 
-            return false;
-
-        }
-
-        if(_f.size()==0)
-            return true;//if vector is empty
+		if(_f.size()==0)
+			return true;//if vector is empty
 	}
 
-    return true;
+	return true;
 }
 
 
@@ -98,7 +96,7 @@ bool Formula::_unitPropagate()
 {
 	bool found_unit = false;
 #ifdef PRINT
-      std::cout << "Begin: Unit propagate\nFormula:";print(std::cout);
+	  std::cout << "Begin: Unit propagate\nFormula:";print(std::cout);
 #endif
 
 	for(auto start = _f.begin(); start != _f.end(); start++)
@@ -113,7 +111,7 @@ bool Formula::_unitPropagate()
 						  	  [=] (clause c) {
 						  	  	return c.count(l) > 0;
 						  	  }
-						    ),
+							),
 				std::end(_f)
 			);
 
@@ -137,8 +135,8 @@ bool Formula::_unitPropagate()
 	#endif
 
 //#ifdef PRINT
-//        print(std::cout);
-//      std::cout << "End: Unit propagate\n";
+//		print(std::cout);
+//	  std::cout << "End: Unit propagate\n";
 //#endif
 
 	return found_unit;
@@ -150,7 +148,7 @@ bool Formula::_unitPropagate()
 bool Formula::_pureLiteral()
 {
 //#ifdef PRINT
-//      std::cout << "Begin: Pure literal\nFormula:";print(std::cout);
+//	  std::cout << "Begin: Pure literal\nFormula:";print(std::cout);
 //#endif
 
 
@@ -236,67 +234,62 @@ bool Formula::_resolution(clause &first, clause &second, literal p)
 	first.erase(first.find(p));
 	second.erase(second.find(-p));
 
-	first.merge(second);
-	// Search if exists q and ~q
+	// TODO: 
+	// - make new clause but before check if clause would be tautology, if so dont make new ones
+	// - if its not, make it and push it back to the vector
+
+	clause c;
+	c.insert(first.begin(), first.end());
+	c.insert(second.begin(), second.end());
+
 	for(literal l : first)
 	{
 		if(first.find(-l) != first.end())
 			return true;
 	}
+	
+	_f.push_back(c);
 	return false;
 };
 
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
-    //std::cout << "eliminate by variable " << l <<  '\n';
-	for (size_t i = 0; i < _f.size(); i++)
+	std::vector<std::vector<clause>::iterator> toErase;
+	auto itLast = _f.end();
+	for(auto itFirst = _f.begin(); itFirst < itLast; itFirst++)
 	{
-		for(size_t j = i + 1; j < _f.size(); j++)
+		for(auto itSecond = itFirst+1; itSecond < itLast; itSecond++)
 		{
-
-			// Check if our clauses contains given literals
-			if(_f[i].find(l) != _f[i].end() && _f[j].find(-l) != _f[j].end())
+			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
 			{
-
-				// Check if given answer is not tautology
-				if(!_resolution(_f[i], _f[j], l))
+				if(!_resolution(*itFirst, *itSecond, l))
 				{
-					// erase second clause 
-					_f.erase(_f.begin() + (j - 1));
-					// Check if clause is empty ( containted only p and ~p)
-					if(_f[i].size() == 0)
+					// Check if clause is empty (first contained only p, second only ~p)
+					if((*itFirst).size() == 0)
 					{
-						// Erase first caluse
-						_f.erase(_f.begin() + i);
 						// Empty clause - so formula is unsat
 						return false;
 					}
 				}
 				// Clause is tautology
-				// delete first and second clause
 				else 
 				{
 					#ifdef DEBUG
-                                //std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-
-                                std::cout << "Formula size : " <<_f.size() << '\n';
-			    	#endif
-                                if(i< (j-1)){
-					_f.erase(_f.begin() + i);
-					_f.erase(_f.begin() + (j - 1));
-                                             }
-                                else{
-                                        _f.erase(_f.begin() + (j-1));
-                                        _f.erase(_f.begin() + i);
-                                    }
-
-
-
-
-				}				
+					std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+					std::cout << "Formula size : " <<_f.size() << '\n';
+					#endif
+					toErase.push_back(itFirst);
+					toErase.push_back(itSecond);
+				}	
 			}
 		}
+
+	}
+
+	for(size_t i = 0; i < toErase.size(); i++)
+	{
+		_f.erase(toErase[i]);
 	}
 	return true;
 }
