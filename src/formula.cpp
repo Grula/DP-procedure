@@ -231,22 +231,32 @@ bool Formula::_pureLiteral()
 bool Formula::_resolution(clause &first, clause &second, literal p)
 {
 	// Erase p from frist clause and ~p from second clause
-	first.erase(first.find(p));
-	second.erase(second.find(-p));
+        first.erase(first.find(p));
+        second.erase(second.find(-p));
 
 	// TODO: 
 	// - make new clause but before check if clause would be tautology, if so dont make new ones
 	// - if its not, make it and push it back to the vector
 
-	clause c;
+        clause c;
 	c.insert(first.begin(), first.end());
 	c.insert(second.begin(), second.end());
 
-	for(literal l : first)
+        for(literal l : c)
 	{
-		if(first.find(-l) != first.end())
+                if(c.find(-l) != c.end())
 			return true;
-	}
+        }
+
+/*        for (auto it=c.begin();it!=c.end();it++){
+                if((*it)==(-p) | (*it)==p)
+                    c.erase(it);
+
+            }*/
+
+        //ako ne nadje p i ~p da ne brise nista
+        //c.erase(c.find(p));
+        //c.erase(c.find(-p));
 	
 	_f.push_back(c);
 	return false;
@@ -255,11 +265,13 @@ bool Formula::_resolution(clause &first, clause &second, literal p)
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
+
+std::cout << "Elimination for variable:" << l << '\n';
 	std::vector<std::vector<clause>::iterator> toErase;
 	auto itLast = _f.end();
-	for(auto itFirst = _f.begin(); itFirst < itLast; itFirst++)
+        for(auto itFirst = _f.begin(); itFirst < _f.end(); itFirst++)
 	{
-		for(auto itSecond = itFirst+1; itSecond < itLast; itSecond++)
+                for(auto itSecond = itFirst+1; itSecond < _f.end(); itSecond++)
 		{
 			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
 			{
@@ -283,6 +295,7 @@ bool Formula::_eliminate(literal l)
 					toErase.push_back(itSecond);
 				}	
 			}
+                        print(std::cout);
 		}
 
 	}
@@ -291,6 +304,8 @@ bool Formula::_eliminate(literal l)
 	{
 		_f.erase(toErase[i]);
 	}
+        std::cout << "After removing elements:\n";
+        print(std::cout);
 	return true;
 }
 
