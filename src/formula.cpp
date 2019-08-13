@@ -84,6 +84,11 @@ bool Formula::DP()
 
 		if(_f.size()==0)
 			return true;//if vector is empty
+		_unitPropagate();
+		_pureLiteral();
+		// do{
+		// 	repeat = _unitPropagate() | _pureLiteral();
+		// }while(repeat);;
 	}
 
 	return true;
@@ -285,15 +290,15 @@ std::cout << "Elimination for variable:" << l << '\n';
 					}
 				}
 				// Clause is tautology
-				else 
-				{
+				// else 
+				// {
 					#ifdef DEBUG
 					std::cout << "############## DEBUG PRINTING ##############" << std::endl;
 					std::cout << "Formula size : " <<_f.size() << '\n';
 					#endif
 					toErase.push_back(itFirst);
 					toErase.push_back(itSecond);
-				}	
+				// }	
 			}
                         print(std::cout);
 		}
