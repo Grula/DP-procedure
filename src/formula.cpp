@@ -57,20 +57,15 @@ std::ostream &Formula::print(std::ostream &out) const
 bool Formula::DP()
 {
 	#ifdef DEBUG
-	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-	print(std::cout);
-	std::cout << std::endl;
-	std::cout << "############################################" << std::endl;
+		std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+		print(std::cout);
+		std::cout << std::endl;
+		std::cout << "############################################" << std::endl;
 	#endif
 	// size_t formulaSize;
 	bool repeat = false;
 	do{
-
-				repeat = _unitPropagate() | _pureLiteral();
-		// repeat = _unitPropagate();
-		// repeat = _pureLiteral() || repeat;
-
-
+		repeat = _unitPropagate() | _pureLiteral();
 	}while(repeat);
 
 
@@ -79,16 +74,12 @@ bool Formula::DP()
 		if(!_eliminate(l))
 		{
 			return false;
-
 		}
-
 		if(_f.size()==0)
 			return true;//if vector is empty
-		_unitPropagate();
-		_pureLiteral();
-		// do{
-		// 	repeat = _unitPropagate() | _pureLiteral();
-		// }while(repeat);;
+		do{
+			repeat = _unitPropagate() | _pureLiteral();
+		}while(repeat);
 	}
 
 	return true;
@@ -100,9 +91,9 @@ bool Formula::DP()
 bool Formula::_unitPropagate()
 {
 	bool found_unit = false;
-#ifdef PRINT
-	  std::cout << "Begin: Unit propagate\nFormula:";print(std::cout);
-#endif
+	#ifdef PRINT
+		  std::cout << "Begin: Unit propagate\nFormula:";print(std::cout);
+	#endif
 
 	for(auto start = _f.begin(); start != _f.end(); start++)
 	{
@@ -158,41 +149,41 @@ bool Formula::_pureLiteral()
 
 
 	bool found_pure = false;
-	_literalsCount.clear(); // try to fill this just once
-	// if(_literalsCount.size() == 0)
-	// {
-		for(clause c : _f )
-		{	
-			for(literal l : c)
-			{
-				if(_literalsCount.count(std::abs(l)) == 0)
-				{
-					if( l > 0)
-					{
-						_literalsCount.insert({std::abs(l), {1,0}});
-					}
-					else
-					{
-						_literalsCount.insert({std::abs(l), {0,1}});
-					}
+	//TODO : Fill literals count only once, this is slowing down a lot
+	_literalsCount.clear();
 
+	for(clause c : _f )
+	{	
+		for(literal l : c)
+		{
+			if(_literalsCount.count(std::abs(l)) == 0)
+			{
+				if( l > 0)
+				{
+					_literalsCount.insert({std::abs(l), {1,0}});
 				}
 				else
 				{
-					// Auto - iterator
-					auto pairs = _literalsCount.find(std::abs(l));
-					if(l > 0)
-					{
-						(*pairs).second.first++;
-					}
-					else
-					{
-						(*pairs).second.second++;
-					}
+					_literalsCount.insert({std::abs(l), {0,1}});
 				}
-			}	
 
-		}
+			}
+			else
+			{
+				// Auto - iterator
+				auto pairs = _literalsCount.find(std::abs(l));
+				if(l > 0)
+				{
+					(*pairs).second.first++;
+				}
+				else
+				{
+					(*pairs).second.second++;
+				}
+			}
+		}	
+
+	}
 	// }
 	for(auto start = _literalsCount.begin(); start != _literalsCount.end(); start++)
 	{	
@@ -221,9 +212,9 @@ bool Formula::_pureLiteral()
 		}
 	}
 	#ifdef DEBUG
-	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-	std::cout << "Pure literal: " << (found_pure ? ("True"):("False")) << std::endl;
-	std::cout << "############################################" << std::endl;
+		std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+		std::cout << "Pure literal: " << (found_pure ? ("True"):("False")) << std::endl;
+		std::cout << "############################################" << std::endl;
 	#endif
 
 
@@ -236,14 +227,14 @@ bool Formula::_pureLiteral()
 bool Formula::_resolution(clause &first, clause &second, literal p)
 {
 	// Erase p from frist clause and ~p from second clause
-        first.erase(first.find(p));
-        second.erase(second.find(-p));
+    first.erase(first.find(p));
+    second.erase(second.find(-p));
 
 	// TODO: 
 	// - make new clause but before check if clause would be tautology, if so dont make new ones
 	// - if its not, make it and push it back to the vector
 
-        clause c;
+    clause c;
 	c.insert(first.begin(), first.end());
 	c.insert(second.begin(), second.end());
 
@@ -270,13 +261,12 @@ bool Formula::_resolution(clause &first, clause &second, literal p)
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
-
-std::cout << "Elimination for variable:" << l << '\n';
+	// std::cout << "Elimination for variable:" << l << '\n';
 	std::vector<std::vector<clause>::iterator> toErase;
-	auto itLast = _f.end();
-        for(auto itFirst = _f.begin(); itFirst < _f.end(); itFirst++)
+	auto itLast = _f.end()-1;
+    for(auto itFirst = _f.begin(); itFirst <= itLast; itFirst++)
 	{
-                for(auto itSecond = itFirst+1; itSecond < _f.end(); itSecond++)
+        for(auto itSecond = itFirst+1; itSecond <= itLast; itSecond++)
 		{
 			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
 			{
@@ -292,15 +282,15 @@ std::cout << "Elimination for variable:" << l << '\n';
 				// Clause is tautology
 				// else 
 				// {
-					#ifdef DEBUG
+				#ifdef DEBUG
 					std::cout << "############## DEBUG PRINTING ##############" << std::endl;
 					std::cout << "Formula size : " <<_f.size() << '\n';
-					#endif
-					toErase.push_back(itFirst);
-					toErase.push_back(itSecond);
+				#endif
+				toErase.push_back(itFirst);
+				toErase.push_back(itSecond);
 				// }	
 			}
-                        print(std::cout);
+            // print(std::cout);
 		}
 
 	}
@@ -309,8 +299,8 @@ std::cout << "Elimination for variable:" << l << '\n';
 	{
 		_f.erase(toErase[i]);
 	}
-        std::cout << "After removing elements:\n";
-        print(std::cout);
+        // std::cout << "After removing elements:\n";
+        // print(std::cout);
 	return true;
 }
 

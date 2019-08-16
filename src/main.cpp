@@ -20,7 +20,7 @@ int main(int argc, char const *argv[]){
 	auto start = std::chrono::steady_clock::now();
 
 	Formula f(argv[1]);
-        f.print(std::cout);
+        // f.print(std::cout);
 
         if(f.DP())
 	{
