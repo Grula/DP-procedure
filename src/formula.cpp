@@ -8,9 +8,10 @@
 #include <unordered_map>
 #include <iostream>
 
-//#define DEBUG
+#define DEBUG
 
-//#define PRINT 1
+#define PRINT 1
+#define wcls(X) std::cout << '{'; for(literal l: X) std::cout << l << ' '; std::cout << "}\n";
 Formula::Formula()
 {};
 
@@ -77,9 +78,9 @@ bool Formula::DP()
 		}
 		if(_f.size()==0)
 			return true;//if vector is empty
-		do{
-			repeat = _unitPropagate() | _pureLiteral();
-		}while(repeat);
+                //do{
+                //        repeat = _unitPropagate() | _pureLiteral();
+                //}while(repeat);
 	}
 
 	return true;
@@ -222,21 +223,48 @@ bool Formula::_pureLiteral()
 	return found_pure;	
 
 };
+
+
+//borrowed from stackOverflow
+//https://stackoverflow.com/questions/24263259/c-stdseterase-with-stdremove-if
+template <class T, class Comp, class Alloc, class Predicate>
+void discard_if(std::set<T, Comp, Alloc>& c, Predicate pred) {
+    for (auto it{c.begin()}, end{c.end()}; it != end; ) {
+        if (pred(*it)) {
+            it = c.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+
 // Resolution
 // Returs true if clause after resolution is tautology
 bool Formula::_resolution(clause &first, clause &second, literal p)
 {
+
+    std::cout << "Resolution begin.\n";
 	// Erase p from frist clause and ~p from second clause
-    first.erase(first.find(p));
-    second.erase(second.find(-p));
+    //first.erase(first.find(p));
+    //second.erase(second.find(-p));
 
 	// TODO: 
 	// - make new clause but before check if clause would be tautology, if so dont make new ones
 	// - if its not, make it and push it back to the vector
+    std::cout << "First:";
+    wcls(first);
+    std::cout << "Second:";
+    wcls(second);
 
     clause c;
 	c.insert(first.begin(), first.end());
 	c.insert(second.begin(), second.end());
+        auto containsp = [p](literal l){return l==p || l==(-p);};
+        std::cout << "Before removing:";wcls(c); std::cout << '\n';
+        discard_if(c, containsp);
+        std::cout << "After removing:";wcls(c); std::cout << '\n';
 
         for(literal l : c)
 	{
@@ -253,32 +281,43 @@ bool Formula::_resolution(clause &first, clause &second, literal p)
         //ako ne nadje p i ~p da ne brise nista
         //c.erase(c.find(p));
         //c.erase(c.find(-p));
-	
-	_f.push_back(c);
+         std::cout << "Before adding clause"; print(std::cout);
+        _f.push_back(c);
 	return false;
 };
 
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
-	// std::cout << "Elimination for variable:" << l << '\n';
+        std::cout << "Elimination for variable:" << l << '\n';
 	std::vector<std::vector<clause>::iterator> toErase;
 	auto itLast = _f.end()-1;
-    for(auto itFirst = _f.begin(); itFirst <= itLast; itFirst++)
+    for(auto itFirst = _f.begin(); itFirst < itLast; itFirst++)
 	{
         for(auto itSecond = itFirst+1; itSecond <= itLast; itSecond++)
 		{
+                    if((*itFirst).find(l) != (*itFirst).end())
+                        std::cout << "Found l:" << l << '\n';
+                     if((*itSecond).find(-l) != (*itSecond).end())
+                             std::cout << "Found -l:" << (-l) << '\n';
+
+
 			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
 			{
+
 				if(!_resolution(*itFirst, *itSecond, l))
 				{
 					// Check if clause is empty (first contained only p, second only ~p)
-					if((*itFirst).size() == 0)
-					{
-						// Empty clause - so formula is unsat
-						return false;
-					}
+                                        //if((*itFirst).size() == 0)
+                                        //{
+                                        //	// Empty clause - so formula is unsat
+                                        //	return false;
+                                        //}
+                                        if(!(std::end(_f)-1)->size())
+                                            return false;
 				}
+                                std::cout << "After resolution:";
+                                print(std::cout);
 				// Clause is tautology
 				// else 
 				// {
