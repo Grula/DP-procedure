@@ -8,9 +8,14 @@
 #include <unordered_map>
 #include <iostream>
 
-//#define DEBUG
+#define DEBUG
 
 //#define PRINT 1
+
+#define wcls(X) std::cout << '{'; \
+                for(auto l: X) std::cout << l << ' '; \
+                std::cout << "}\n";
+
 Formula::Formula()
 {};
 
@@ -78,14 +83,14 @@ bool Formula::DP()
 	{
 		if(!_eliminate(l))
 		{
+
 			return false;
 
 		}
 
-		if(_f.size()==0)
-			return true;//if vector is empty
-		_unitPropagate();
-		_pureLiteral();
+
+                //_unitPropagate();
+                //_pureLiteral();
 		// do{
 		// 	repeat = _unitPropagate() | _pureLiteral();
 		// }while(repeat);;
@@ -231,64 +236,105 @@ bool Formula::_pureLiteral()
 	return found_pure;	
 
 };
+
+//removes elements from set that satisfies pred
+template <class T, class Comp, class Alloc, class Predicate>
+void discard_if(std::set<T, Comp, Alloc>& c, Predicate pred) {
+    for (auto it{c.begin()}, end{c.end()}; it != end; ) {
+        if (pred(*it)) {
+            it = c.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
 // Resolution
-// Returs true if clause after resolution is tautology
+// Returs false if clause is empty
+          //true otherwise
 bool Formula::_resolution(clause &first, clause &second, literal p)
 {
-	// Erase p from frist clause and ~p from second clause
-        first.erase(first.find(p));
-        second.erase(second.find(-p));
+        //Erase p from frist clause and ~p from second clause
+        //first.erase(first.find(p));
+        //second.erase(second.find(-p));
 
 	// TODO: 
 	// - make new clause but before check if clause would be tautology, if so dont make new ones
 	// - if its not, make it and push it back to the vector
 
-        clause c;
-	c.insert(first.begin(), first.end());
-	c.insert(second.begin(), second.end());
+       clause c;
 
+
+
+       c.insert(first.begin(), first.end());
+       c.insert(second.begin(), second.end());
+
+        std::cout << "Resolvent to be checked"; wcls(c); std::cout << '\n';
+
+
+        //ovde izbaciti p i -p
+        auto containsp = [p](literal l){return l==p || l==(-p);};
+        std::cout << "Before erasing p & -p\n";
+                     wcls(c);
+        discard_if(c, containsp);
+
+        std::cout << "After erasing p & -p\n";
+                     wcls(c);
+
+        if(c.size()==0)
+            return false; //clause is empty
+
+        //provera da li klauza ima suprotne literale
         for(literal l : c)
 	{
+
                 if(c.find(-l) != c.end())
 			return true;
         }
 
-/*        for (auto it=c.begin();it!=c.end();it++){
-                if((*it)==(-p) | (*it)==p)
-                    c.erase(it);
-
-            }*/
-
         //ako ne nadje p i ~p da ne brise nista
         //c.erase(c.find(p));
         //c.erase(c.find(-p));
-	
-	_f.push_back(c);
-	return false;
+        std::cout << "Resolvent to be added in formula\n";
+        wcls(c); std::cout << '\n';
+        _f.push_back(c);
+        return true;
 };
 
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
 
-std::cout << "Elimination for variable:" << l << '\n';
+        std::cout << "Elimination for variable:" << l << '\n';
 	std::vector<std::vector<clause>::iterator> toErase;
-	auto itLast = _f.end();
+        //auto itLast = _f.end();
+
+        //prva dupla petlja je da li moze svaki sa svakom da izvede praznu klauzu
         for(auto itFirst = _f.begin(); itFirst < _f.end(); itFirst++)
 	{
                 for(auto itSecond = itFirst+1; itSecond < _f.end(); itSecond++)
 		{
 			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
 			{
-				if(!_resolution(*itFirst, *itSecond, l))
+
+
+                                std::cout << "Resolution for clauses:\n";
+                                wcls(*itFirst);
+                                wcls(*itSecond);
+                                //if false f is unsat
+                                if(!_resolution(*itFirst, *itSecond, l))
 				{
-					// Check if clause is empty (first contained only p, second only ~p)
-					if((*itFirst).size() == 0)
-					{
-						// Empty clause - so formula is unsat
-						return false;
-					}
+
+                                          std::cout << "Last added clause\n";
+                                          wcls(*(std::end(_f)-1));
+                                          std::cout << "\n";
+
+                                          std::cout << "Declaring unsatisfability\n";
+                                          return false;
+
 				}
+                                std::cout << "After resolution branch:";
+                                print(std::cout);
 				// Clause is tautology
 				// else 
 				// {
@@ -296,21 +342,31 @@ std::cout << "Elimination for variable:" << l << '\n';
 					std::cout << "############## DEBUG PRINTING ##############" << std::endl;
 					std::cout << "Formula size : " <<_f.size() << '\n';
 					#endif
-					toErase.push_back(itFirst);
-					toErase.push_back(itSecond);
-				// }	
+                                        toErase.push_back(itFirst);
+                                        toErase.push_back(itSecond);
+
 			}
-                        print(std::cout);
+
 		}
 
 	}
 
-	for(size_t i = 0; i < toErase.size(); i++)
-	{
-		_f.erase(toErase[i]);
-	}
-        std::cout << "After removing elements:\n";
+        //ako ne izvede praznu klauzu uzimam prve klauze za koje vazi da imaju p i -p i rezolviram ih
+
+
+//  ovde ide pronalazenje prve dve klauze koje zadovoljavaju p i -p
+
+
+        //for(size_t i = 0; i < toErase.size(); i++)
+        //{
+        //	_f.erase(toErase[i]);
+        //}
+        //std::cout << "After removing elements:\n";
+
+
         print(std::cout);
+
+        std::cout << "\n";
 	return true;
 }
 
