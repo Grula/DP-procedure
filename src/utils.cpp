@@ -19,18 +19,21 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
 		_file.open(fileName);
 		if (_file.is_open())
 	  	{
-	  		std::getline(_file, line);
-	  		if(unlikely(!_splitAndCheck(line, nLiteral, nClause)))
+	  		while(std::getline(_file, line))
 	  		{
-	  			*nLiteral = *nClause = 0;
-	  		}
+		  		if(_splitAndCheck(line, nLiteral, nClause))
+		  		{
+		  			break;
+		  		}
+			}
 			while ( std::getline (_file,line) )
 			{
-                                        clause c;
-                        //                std::cout << line << '\n';
-                                        _fillClause(line, c);
-                                        f.push_back(c);
-                        }
+				clause c;
+				std::cout << line << '\n';
+				_fillClause(line, c);
+				if(c.size() != 0)
+					f.push_back(c);
+	        }
 
 			_file.close();
 		}
@@ -66,6 +69,7 @@ bool _ReadDIMACS::_splitAndCheck(const std::string& str, unsigned *nLiteral, uns
 void _ReadDIMACS::_fillClause(std::string &s, clause &c)
 {
         std::regex litexp("[-]?(\\d)+");
+
 
         std::regex_token_iterator<std::string::iterator> rti ( s.begin(), s.end(), litexp);
         std::regex_token_iterator<std::string::iterator> rend;
