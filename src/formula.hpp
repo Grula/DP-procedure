@@ -26,7 +26,7 @@ private:
 	// Pure Literal
 	bool _pureLiteral();
 	// Variable Elimination
-	bool _resolution(clause &first, clause &second, literal p);
+	bool _resolution(const clause &first,const clause &second,const literal p);
 
 	bool _eliminate(literal l);
 

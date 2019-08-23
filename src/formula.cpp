@@ -8,9 +8,9 @@
 #include <unordered_map>
 #include <iostream>
 
-//#define DEBUG
+// #define DEBUG
 
-//#define PRINT 1
+#define wcls(X) std::cout << '{'; for(literal l: X) std::cout << l << ' '; std::cout << "}\n";
 Formula::Formula()
 {};
 
@@ -57,10 +57,9 @@ std::ostream &Formula::print(std::ostream &out) const
 bool Formula::DP()
 {
 	#ifdef DEBUG
-		std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+		std::cout << "*****************Printing Formula*****************" << std::endl;
 		print(std::cout);
 		std::cout << std::endl;
-		std::cout << "############################################" << std::endl;
 	#endif
 	// size_t formulaSize;
 	bool repeat = false;
@@ -75,8 +74,8 @@ bool Formula::DP()
 		{
 			return false;
 		}
-		if(_f.size()==0)
-			return true;//if vector is empty
+		// If formula is empty - return SAT
+		if(_f.size()==0) return true;//if vector is empty
 		do{
 			repeat = _unitPropagate() | _pureLiteral();
 		}while(repeat);
@@ -91,7 +90,7 @@ bool Formula::DP()
 bool Formula::_unitPropagate()
 {
 	bool found_unit = false;
-	#ifdef PRINT
+	#ifdef DEBUG
 		  std::cout << "Begin: Unit propagate\nFormula:";print(std::cout);
 	#endif
 
@@ -104,7 +103,7 @@ bool Formula::_unitPropagate()
 			// Remove other clauses that contain given literal
 			_f.erase(
 				std::remove_if(_f.begin(),_f.end(),
-						  	  [=] (clause c) {
+						  	  [=] (clause &c) {
 						  	  	return c.count(l) > 0;
 						  	  }
 							),
@@ -125,15 +124,8 @@ bool Formula::_unitPropagate()
 		}
 	}
 	#ifdef DEBUG
-	std::cout << "############## DEBUG PRINTING ##############" << std::endl;
-	std::cout << "Unit propagation: " << (found_unit ? ("True"):("False")) << std::endl;
-	std::cout << "############################################" << std::endl;
+	std::cout << "Unit propagation: " << (found_unit ? ("True"):("False")) << std::endl;print(std::cout);
 	#endif
-
-//#ifdef PRINT
-//		print(std::cout);
-//	  std::cout << "End: Unit propagate\n";
-//#endif
 
 	return found_unit;
 
@@ -143,9 +135,6 @@ bool Formula::_unitPropagate()
 // Pure Literal
 bool Formula::_pureLiteral()
 {
-//#ifdef PRINT
-//	  std::cout << "Begin: Pure literal\nFormula:";print(std::cout);
-//#endif
 
 
 	bool found_pure = false;
@@ -212,9 +201,7 @@ bool Formula::_pureLiteral()
 		}
 	}
 	#ifdef DEBUG
-		std::cout << "############## DEBUG PRINTING ##############" << std::endl;
 		std::cout << "Pure literal: " << (found_pure ? ("True"):("False")) << std::endl;
-		std::cout << "############################################" << std::endl;
 	#endif
 
 
@@ -222,83 +209,166 @@ bool Formula::_pureLiteral()
 	return found_pure;	
 
 };
+
+
+/* Borrowed from stackOverflow
+ * URL : https://stackoverflow.com/questions/24263259/c-stdseterase-with-stdremove-if
+ */
+template <class T, class Comp, class Alloc, class Predicate>
+void discard_if(std::set<T, Comp, Alloc>& c, Predicate pred) {
+    for (auto it{c.begin()}, end{c.end()}; it != end; ) {
+        if (pred(*it)) {
+            it = c.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+
 // Resolution
 // Returs true if clause after resolution is tautology
-bool Formula::_resolution(clause &first, clause &second, literal p)
+bool Formula::_resolution(const clause &first,const clause &second,const literal p)
 {
-	// Erase p from frist clause and ~p from second clause
-    first.erase(first.find(p));
-    second.erase(second.find(-p));
-
-	// TODO: 
-	// - make new clause but before check if clause would be tautology, if so dont make new ones
-	// - if its not, make it and push it back to the vector
+	#ifdef DEBUG
+	    std::cout << "################\n";
+	    std::cout << "Resolution begin.\n";
+	    std::cout << "First:";
+	    wcls(first);
+	    std::cout << "Second:";
+	    wcls(second);
+	#endif
 
     clause c;
 	c.insert(first.begin(), first.end());
 	c.insert(second.begin(), second.end());
+    auto containsp = [p](literal l){return l==p || l==(-p);};
+    #ifdef DEBUG
+        std::cout << "Before removing:";wcls(c); std::cout << '\n';
+    #endif
+    discard_if(c, containsp);
+    #ifdef DEBUG
+        std::cout << "After removing:";wcls(c); std::cout << '\n';
+    #endif
 
-        for(literal l : c)
+    for(literal l : c)
 	{
-                if(c.find(-l) != c.end())
+    	if(c.find(-l) != c.end())
+    	{
+		    #ifdef DEBUG
+		        std::cout << "Found tautology! \n";
+		    #endif
 			return true;
-        }
+    	}
+    }
+    std::cout << std::endl;
+    #ifdef DEBUG
+        std::cout << "Before adding clause"; print(std::cout);
+		std::cout << "################\n";
+    #endif
 
-/*        for (auto it=c.begin();it!=c.end();it++){
-                if((*it)==(-p) | (*it)==p)
-                    c.erase(it);
-
-            }*/
-
-        //ako ne nadje p i ~p da ne brise nista
-        //c.erase(c.find(p));
-        //c.erase(c.find(-p));
-	
-	_f.push_back(c);
+    _f.push_back(c);
 	return false;
 };
 
 // Eliminate variable
 bool Formula::_eliminate(literal l)
 {
-	// std::cout << "Elimination for variable:" << l << '\n';
-	std::vector<std::vector<clause>::iterator> toErase;
+	#ifdef DEBUG
+	    std::cout << "*************************************************" << '\n';
+	    std::cout << "Elimination for variable:" << l << '\n';
+	#endif
+	// std::vector<std::vector<clause>::iterator> toErase;
 	auto itLast = _f.end()-1;
-    for(auto itFirst = _f.begin(); itFirst <= itLast; itFirst++)
+    	
+
+	// NOTICE: 
+	//		 - For some reason iteraot itLast becomes invalid, making workaround
+	size_t lastElem = _f.size();
+	for(size_t i = 0; i < lastElem; i++)
 	{
-        for(auto itSecond = itFirst+1; itSecond <= itLast; itSecond++)
+		if(_f[i].size() == 0) return false;
+		for(size_t j = i+1; j < lastElem; j++)
 		{
-			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
+			if(_f[j].size() == 0) return false;
+			if(_f[i].find(l) != _f[i].end() && _f[j].find(-l) != _f[j].end())
 			{
-				if(!_resolution(*itFirst, *itSecond, l))
+
+				if(!_resolution(_f[i], _f[j], l))
 				{
-					// Check if clause is empty (first contained only p, second only ~p)
-					if((*itFirst).size() == 0)
-					{
-						// Empty clause - so formula is unsat
+					// Check if last added clause is empty
+					if(!(std::end(_f)-1)->size())
 						return false;
-					}
 				}
-				// Clause is tautology
-				// else 
-				// {
 				#ifdef DEBUG
-					std::cout << "############## DEBUG PRINTING ##############" << std::endl;
+					std::cout << "After resolution:";
+					print(std::cout);
 					std::cout << "Formula size : " <<_f.size() << '\n';
 				#endif
-				toErase.push_back(itFirst);
-				toErase.push_back(itSecond);
-				// }	
+
 			}
-            // print(std::cout);
+		}
+	}
+	/*
+    for(auto itFirst = _f.begin(); itFirst < itLast; itFirst++)
+	{
+			std::cout << "LAST CLAUSE" << std::endl;
+			for(auto c: *itLast)
+			{
+				std::cout << c << " ";
+			}
+			std::cout  << std::endl;
+			std::cout  << std::endl;
+
+		std::cout << "First c" << std::endl;
+		for(auto c: *itFirst)
+		{
+			std::cout << c << " ";
+		}
+		std::cout  << std::endl;
+		std::cout  << std::endl;
+
+        for(auto itSecond = itFirst+1; itSecond < itLast+1; itSecond++)
+		{
+			std::cout << "Size : " <<  (*itSecond).size() << '\n';
+			std::cout << "Second : ";
+			for(auto c: *itSecond)
+			{
+				std::cout << c << " ";
+			}
+			std::cout  << std::endl;
+
+			if((*itFirst).find(l) != (*itFirst).end() && (*itSecond).find(-l) != (*itSecond).end())
+			{
+
+				if(!_resolution(*itFirst, *itSecond, l))
+				{
+					// Check if last added clause is empty
+					if(!(std::end(_f)-1)->size())
+						return false;
+				}
+				#ifdef DEBUG
+					std::cout << "After resolution:";
+					print(std::cout);
+					std::cout << "Formula size : " <<_f.size() << '\n';
+				#endif
+				// toErase.push_back(itFirst);
+				// toErase.push_back(itSecond);
+			}
 		}
 
-	}
+	}	
+	*/
+	#ifdef DEBUG
+	    std::cout << "Variable:" << l << " eliminated" <<'\n';
+	    std::cout << "*************************************************" << '\n';
+	#endif
 
-	for(size_t i = 0; i < toErase.size(); i++)
-	{
-		_f.erase(toErase[i]);
-	}
+	// for(size_t i = 0; i < toErase.size(); i++)
+	// {
+	// 	_f.erase(toErase[i]);
+	// }
         // std::cout << "After removing elements:\n";
         // print(std::cout);
 	return true;
