@@ -29,7 +29,7 @@ _ReadDIMACS::_ReadDIMACS(std::string fileName, unsigned *nLiteral, unsigned *nCl
 			while ( std::getline (_file,line) )
 			{
 				clause c;
-				std::cout << line << '\n';
+				// std::cout << line << '\n';
 				_fillClause(line, c);
 				if(c.size() != 0)
 					f.push_back(c);

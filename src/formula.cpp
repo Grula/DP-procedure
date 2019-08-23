@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <iostream>
 
-#define DEBUG
+// #define DEBUG
 
 #define wcls(X) std::cout << '{'; for(literal l: X) std::cout << l << ' '; std::cout << "}\n";
 Formula::Formula()
